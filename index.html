@@ -8,9 +8,13 @@
 body {
   background: #000;
   color: #00ff00;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
+  margin: 0;
+  padding: 0;
 }
+
+h1 { margin-top: 30px; }
 
 .card {
   background: #111;
@@ -21,6 +25,176 @@ body {
   width: 250px;
   box-shadow: 0 0 15px #00ff00;
 }
+
+input, button {
+  background: black;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+button:hover {
+  background: #00ff00;
+  color: black;
+  cursor: pointer;
+}
+
+#app { display: none; }
+#loginDiv, #signupDiv { margin-top: 30px; }
+</style>
+</head>
+
+<body>
+
+<h1>🌡 Station Météo</h1>
+
+<!-- Formulaire Login -->
+<div id="loginDiv">
+  <h3>Connexion</h3>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Mot de passe"><br>
+  <button onclick="login()">Se connecter</button>
+</div>
+
+<!-- Formulaire Inscription -->
+<div id="signupDiv">
+  <h3>Créer un compte</h3>
+  <input type="email" id="signupEmail" placeholder="Email"><br>
+  <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
+  <button onclick="signup()">S’inscrire</button>
+</div>
+
+<!-- Interface Station Météo -->
+<div id="app">
+
+  <button onclick="toggleLampe()" id="btnLampe">Lampe ON / OFF</button>
+
+  <div class="card">
+    <h2>Extérieur</h2>
+    <p>Température : <span id="tempExt">--</span> °C</p>
+    <p>Humidité : <span id="humExt">--</span> %</p>
+  </div>
+
+  <div class="card">
+    <h2>Intérieur</h2>
+    <p>Température : <span id="tempInt">--</span> °C</p>
+    <p>Humidité : <span id="humInt">--</span> %</p>
+  </div>
+
+  <button onclick="logout()">Déconnexion</button>
+</div>
+
+<script type="module">
+
+// Import Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue, set, get } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// 🔑 Configuration Firebase
+const firebaseConfig = {
+  apiKey: "TON_API_KEY",
+  authDomain: "TON_PROJET.firebaseapp.com",
+  databaseURL: "https://TON_PROJET-default-rtdb.firebaseio.com",
+  projectId: "TON_PROJET"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getDatabase();
+
+// Stocke le rôle
+let userRole = null;
+
+// ---------------------- FONCTIONS AUTH ----------------------
+
+// Login
+window.login = function() {
+  const emailVal = email.value;
+  const passwordVal = password.value;
+
+  signInWithEmailAndPassword(auth, emailVal, passwordVal)
+  .catch(err => alert("Erreur connexion : " + err.message));
+}
+
+// Inscription
+window.signup = async function() {
+  const emailVal = signupEmail.value;
+  const passwordVal = signupPassword.value;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, emailVal, passwordVal);
+    const user = userCredential.user;
+
+    // Nouveau compte = role "user"
+    await set(ref(db, "users/" + user.uid), { role: "user" });
+
+    alert("Compte créé ! Vous pouvez maintenant vous connecter.");
+    signupEmail.value = "";
+    signupPassword.value = "";
+
+  } catch(error) {
+    alert("Erreur inscription : " + error.message);
+  }
+}
+
+// Logout
+window.logout = function() {
+  signOut(auth);
+}
+
+// Vérification connexion
+onAuthStateChanged(auth, async (user) => {
+  if(user) {
+
+    // Masque login/signup, affiche app
+    loginDiv.style.display = "none";
+    signupDiv.style.display = "none";
+    app.style.display = "block";
+
+    // Récup rôle
+    const roleSnap = await get(ref(db, "users/" + user.uid));
+    userRole = roleSnap.val().role;
+
+    if(userRole !== "admin"){
+      btnLampe.style.display = "none"; // User normal ne peut pas modifier
+    }
+
+    // Lecture station météo
+    onValue(ref(db,"station"), (snapshot)=>{
+      const data = snapshot.val();
+      tempExt.innerText = data.exterieur.temperature;
+      humExt.innerText = data.exterieur.humidite;
+      tempInt.innerText = data.interieur.temperature;
+      humInt.innerText = data.interieur.humidite;
+    });
+
+  } else {
+    // Affiche login/signup si pas connecté
+    loginDiv.style.display = "block";
+    signupDiv.style.display = "block";
+    app.style.display = "none";
+  }
+});
+
+// ---------------------- FONCTION LAMPE ----------------------
+window.toggleLampe = async function(){
+  if(userRole === "admin"){
+    const lampeRef = ref(db,"station/lampe");
+    const snap = await get(lampeRef);
+    set(lampeRef, !snap.val());
+  }
+}
+
+</script>
+
+</body>
+</html>
 
 input, button {
   background: black;
