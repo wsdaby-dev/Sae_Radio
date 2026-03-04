@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <title>Station Météo</title>
 
 <style>
+/* ---------- CSS ---------- */
 body {
   background: #000;
   color: #00ff00;
@@ -89,29 +90,35 @@ button:hover {
 </div>
 
 <script type="module">
+// ---------- JS ----------
 
-// Import Firebase
+// Import Firebase depuis CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, onValue, set, get } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Config Firebase
+// 🔑 Config Firebase réelle
 const firebaseConfig = {
-  apiKey: "TON_API_KEY",
-  authDomain: "TON_PROJET.firebaseapp.com",
-  databaseURL: "https://TON_PROJET-default-rtdb.firebaseio.com",
-  projectId: "TON_PROJET"
+  apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
+  authDomain: "saeradio-4cb75.firebaseapp.com",
+  databaseURL: "https://saeradio-4cb75-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "saeradio-4cb75",
+  storageBucket: "saeradio-4cb75.appspot.com",
+  messagingSenderId: "88549628626",
+  appId: "1:88549628626:web:0f8ae72085e727e6452b0b",
+  measurementId: "G-8BHDY0Y8D8"
 };
 
+// Initialisation Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getDatabase();
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 let userRole = null;
 
-// ---------------------- AUTH ----------------------
+// ---------- AUTH ----------
 
 // Login
 window.login = function() {
@@ -125,7 +132,6 @@ window.signup = async function() {
     const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
     const user = userCredential.user;
 
-    // Nouveau compte = role "user"
     await set(ref(db, "users/" + user.uid), { role: "user" });
 
     alert("Compte créé ! Cliquez sur 'Aller au compte' pour accéder à l'interface.");
@@ -133,7 +139,6 @@ window.signup = async function() {
 
     signupEmail.value = "";
     signupPassword.value = "";
-
   } catch(error) {
     alert("Erreur inscription : " + error.message);
   }
@@ -149,35 +154,38 @@ window.goToAccount = function() {
 
 // Logout
 window.logout = function() {
-  signOut(auth);
+  signOut(auth).then(() => location.reload());
 }
 
-// ---------------------- STATION METEO ----------------------
+// ---------- STATION METEO ----------
 function initStation(user){
   if(!user) return;
 
+  // Récupérer role utilisateur
   get(ref(db, "users/" + user.uid)).then(roleSnap => {
     userRole = roleSnap.val().role;
-    if(userRole !== "admin"){
-      btnLampe.style.display = "none";
-    }
+    btnLampe.style.display = (userRole === "admin") ? "inline-block" : "none";
   });
 
   // Lecture station en temps réel
   const stationRef = ref(db,"station");
   onValue(stationRef, snapshot => {
-    const data = snapshot.val();
-    tempExt.innerText = data.exterieur.temperature;
-    humExt.innerText = data.exterieur.humidite;
-    tempInt.innerText = data.interieur.temperature;
-    humInt.innerText = data.interieur.humidite;
+    const data = snapshot.val() || {};
+    if(data.exterieur){
+      tempExt.innerText = data.exterieur.temperature ?? "--";
+      humExt.innerText = data.exterieur.humidite ?? "--";
+    }
+    if(data.interieur){
+      tempInt.innerText = data.interieur.temperature ?? "--";
+      humInt.innerText = data.interieur.humidite ?? "--";
+    }
   });
 }
 
 // Sur changement d’état Auth
 onAuthStateChanged(auth, initStation);
 
-// ---------------------- LAMPE ----------------------
+// ---------- LAMPE ----------
 window.toggleLampe = async function(){
   if(userRole === "admin"){
     const lampeRef = ref(db,"station/lampe");
@@ -185,7 +193,7 @@ window.toggleLampe = async function(){
     set(lampeRef, !snap.val());
   }
 }
-
 </script>
+
 </body>
 </html>
