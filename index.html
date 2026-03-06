@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Station Météo</title>
-
 <style>
 body {
   background: #f5f5f5;
@@ -45,7 +44,6 @@ button:hover {
 </head>
 
 <body>
-
 <h1>🌡 Station Météo</h1>
 
 <!-- Login Utilisateur -->
@@ -125,22 +123,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-let userRole = null;
+
+// Récupérer les éléments
+const loginDiv = document.getElementById("loginDiv");
+const signupDiv = document.getElementById("signupDiv");
+const personalInfoDiv = document.getElementById("personalInfoDiv");
+const appDiv = document.getElementById("app");
+const logoutBtn = document.getElementById("logoutBtn");
+const goToAccountBtn = document.getElementById("goToAccount");
+const adminDiv = document.getElementById("adminDiv");
+const tempExt = document.getElementById("tempExt");
+const humExt = document.getElementById("humExt");
+const tempInt = document.getElementById("tempInt");
+const humInt = document.getElementById("humInt");
+const dateData = document.getElementById("dateData");
 
 // -------------------- Utilisateur --------------------
 window.login = function() {
-  signInWithEmailAndPassword(auth, email.value, password.value)
-    .then(() => {
+  const emailVal = document.getElementById("email").value;
+  const passwordVal = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, emailVal, passwordVal)
+    .then((userCredential) => {
+      const user = userCredential.user;
       loginDiv.style.display = "none";
       signupDiv.style.display = "none";
-      app.style.display = "block";
+      personalInfoDiv.style.display = "none";
+
+      // Charger la station météo et calendrier
+      initStation(user);
+      appDiv.style.display = "block";
     })
     .catch(err => alert("Erreur connexion : " + err.message));
 }
 
 window.signup = async function() {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
+    const signupEmailVal = document.getElementById("signupEmail").value;
+    const signupPasswordVal = document.getElementById("signupPassword").value;
+    const userCredential = await createUserWithEmailAndPassword(auth, signupEmailVal, signupPasswordVal);
     signupDiv.style.display = "none";
     personalInfoDiv.style.display = "block";
   } catch(error) {
@@ -149,29 +170,35 @@ window.signup = async function() {
 }
 
 window.savePersonalInfo = async function() {
-  const firstName = document.getElementById("firstName").value;
-  const lastName = document.getElementById("lastName").value;
-  const age = document.getElementById("age").value;
+  const firstNameVal = document.getElementById("firstName").value;
+  const lastNameVal = document.getElementById("lastName").value;
+  const ageVal = document.getElementById("age").value;
   const user = auth.currentUser;
   if(!user) return alert("Utilisateur non connecté !");
-  
+
   await set(ref(db, "users/" + user.uid), {
     role: "user",
-    firstName,
-    lastName,
-    age,
+    firstName: firstNameVal,
+    lastName: lastNameVal,
+    age: ageVal,
     email: user.email
   });
 
   personalInfoDiv.style.display = "none";
-  app.style.display = "block";
+  appDiv.style.display = "block";
+
+  // Charger la station
+  initStation(user);
 }
 
 window.goToAccount = function() {
-  loginDiv.style.display="none";
-  signupDiv.style.display="none";
-  personalInfoDiv.style.display="none";
-  app.style.display="block";
+  loginDiv.style.display = "none";
+  signupDiv.style.display = "none";
+  personalInfoDiv.style.display = "none";
+  appDiv.style.display = "block";
+
+  const user = auth.currentUser;
+  if(user) initStation(user);
 }
 
 window.logout = function() {
@@ -190,6 +217,7 @@ function initStation(user) {
     tempInt.innerText = data.interieur?.temperature ?? "--";
     humInt.innerText = data.interieur?.humidite ?? "--";
 
+    // Historique pour calendrier
     const today = new Date().toISOString().slice(0,10);
     set(ref(db, "historique/" + today), {
       exterieur: data.exterieur || {},
@@ -198,7 +226,7 @@ function initStation(user) {
   });
 }
 
-// Lampe visible pour tous
+// Lampe pour tous
 window.toggleLampe = async function() {
   const lampeRef = ref(db,"station/lampe");
   const snap = await get(lampeRef);
@@ -216,21 +244,21 @@ window.loadDateData = async function() {
   } else {
     const d = snap.val();
     dateData.innerHTML = `
-      <strong>Extérieur :</strong> Température ${d.exterieur.temperature}°C / Humidité ${d.exterieur.humidite}%<br>
-      <strong>Intérieur :</strong> Température ${d.interieur.temperature}°C / Humidité ${d.interieur.humidite}%
+      <strong>Extérieur :</strong> Température ${d.exterieur.temperature ?? "--"}°C / Humidité ${d.exterieur.humidite ?? "--"}%<br>
+      <strong>Intérieur :</strong> Température ${d.interieur.temperature ?? "--"}°C / Humidité ${d.interieur.humidite ?? "--"}%
     `;
   }
 }
 
 // -------------------- Admin --------------------
 window.loginAdmin = function() {
-  const email = adminEmail.value;
-  const password = adminPassword.value;
-  signInWithEmailAndPassword(auth, email, password)
+  const emailVal = document.getElementById("adminEmail").value;
+  const passwordVal = document.getElementById("adminPassword").value;
+  signInWithEmailAndPassword(auth, emailVal, passwordVal)
     .then(() => {
       alert("Connexion Admin réussie !");
       adminDiv.style.display = "none";
-      app.style.display = "block";
+      appDiv.style.display = "block";
     })
     .catch(err => alert("Erreur Admin : " + err.message));
 }
