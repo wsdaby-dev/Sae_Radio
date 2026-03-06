@@ -48,24 +48,24 @@ button:hover {
 
 <h1>🌡 Station Météo</h1>
 
-<!-- Login -->
-<div id="loginDiv">
+<!-- Login Utilisateur -->
+<div id="loginDiv" class="card">
   <h3>Connexion Utilisateur</h3>
   <input type="email" id="email" placeholder="Email"><br>
   <input type="password" id="password" placeholder="Mot de passe"><br>
   <button onclick="login()">Se connecter</button>
 </div>
 
-<!-- Signup -->
-<div id="signupDiv">
+<!-- Signup Utilisateur -->
+<div id="signupDiv" class="card">
   <h3>Créer un compte</h3>
   <input type="email" id="signupEmail" placeholder="Email"><br>
   <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
   <button onclick="signup()">S’inscrire</button>
 </div>
 
-<!-- Personal info -->
-<div id="personalInfoDiv">
+<!-- Formulaire infos personnelles -->
+<div id="personalInfoDiv" class="card">
   <h3>Informations personnelles</h3>
   <input type="text" id="firstName" placeholder="Prénom"><br>
   <input type="text" id="lastName" placeholder="Nom"><br>
@@ -76,7 +76,7 @@ button:hover {
 <!-- Aller au compte -->
 <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 
-<!-- App Utilisateur -->
+<!-- Interface Utilisateur -->
 <div id="app">
   <div class="card">
     <h2>Station Météo</h2>
@@ -96,7 +96,7 @@ button:hover {
   <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
-<!-- Admin Login -->
+<!-- Connexion Admin séparée -->
 <div id="adminDiv" class="card">
   <h3>Connexion Admin</h3>
   <input type="email" id="adminEmail" placeholder="Email Admin"><br>
@@ -204,7 +204,7 @@ function initStation(user) {
   });
 }
 
-// Lampe visible pour tout le monde
+// Lampe visible pour tous
 window.toggleLampe = async function() {
   const lampeRef = ref(db,"station/lampe");
   const snap = await get(lampeRef);
