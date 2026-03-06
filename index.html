@@ -5,83 +5,108 @@
 <title>Station Météo</title>
 
 <style>
-body{
-  background:#000;
-  color:#00ff00;
-  font-family:Arial;
-  text-align:center;
+body {
+  background: #000;
+  color: #00ff00;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 
-.card{
-  background:#111;
-  border:2px solid #00ff00;
-  border-radius:15px;
-  padding:20px;
-  margin:20px auto;
-  width:250px;
+h1 { margin-top: 30px; }
+
+.card {
+  background: #111;
+  border: 2px solid #00ff00;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px auto;
+  width: 250px;
+  box-shadow: 0 0 15px #00ff00;
 }
 
-input,button{
-  background:black;
-  color:#00ff00;
-  border:2px solid #00ff00;
-  padding:10px;
-  margin:10px;
-  border-radius:8px;
+input, button {
+  background: black;
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+  font-size: 16px;
 }
 
-#app{display:none;}
-#goToAccount{display:none;}
+button:hover {
+  background: #00ff00;
+  color: black;
+  cursor: pointer;
+}
+
+#app, #personalInfoDiv { display: none; }
+#loginDiv, #signupDiv { margin-top: 30px; }
+#goToAccount { display: none; }
 </style>
 </head>
 
 <body>
 
-<h1>🌡 Station météo</h1>
+<h1>🌡 Station Météo</h1>
 
+<!-- Formulaire Login -->
 <div id="loginDiv">
-<h3>Connexion</h3>
-<input id="email" type="email" placeholder="email"><br>
-<input id="password" type="password" placeholder="mot de passe"><br>
-<button onclick="login()">Connexion</button>
+  <h3>Connexion</h3>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Mot de passe"><br>
+  <button onclick="login()">Se connecter</button><br>
+  <button onclick="loginWithGoogle()">Connexion avec Google</button>
 </div>
 
+<!-- Formulaire Inscription -->
 <div id="signupDiv">
-<h3>Créer un compte</h3>
-<input id="signupEmail" type="email" placeholder="email"><br>
-<input id="signupPassword" type="password" placeholder="mot de passe"><br>
-<button onclick="signup()">Inscription</button>
-<button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
+  <h3>Créer un compte</h3>
+  <input type="email" id="signupEmail" placeholder="Email"><br>
+  <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
+  <button onclick="signup()">S’inscrire</button>
+  <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 </div>
 
+<!-- Formulaire Infos personnelles -->
+<div id="personalInfoDiv">
+  <h3>Informations personnelles</h3>
+  <input type="text" id="firstName" placeholder="Prénom"><br>
+  <input type="text" id="lastName" placeholder="Nom"><br>
+  <input type="number" id="age" placeholder="Âge"><br>
+  <button onclick="savePersonalInfo()">Valider</button>
+</div>
+
+<!-- Interface Station Météo -->
 <div id="app">
+  <button onclick="toggleLampe()" id="btnLampe">Lampe ON / OFF</button>
 
-<button id="btnLampe" onclick="toggleLampe()">Lampe ON/OFF</button>
+  <div class="card">
+    <h2>Extérieur</h2>
+    <p>Température : <span id="tempExt">--</span> °C</p>
+    <p>Humidité : <span id="humExt">--</span> %</p>
+  </div>
 
-<div class="card">
-<h2>Extérieur</h2>
-Température : <span id="tempExt">--</span> °C<br>
-Humidité : <span id="humExt">--</span> %
-</div>
+  <div class="card">
+    <h2>Intérieur</h2>
+    <p>Température : <span id="tempInt">--</span> °C</p>
+    <p>Humidité : <span id="humInt">--</span> %</p>
+  </div>
 
-<div class="card">
-<h2>Intérieur</h2>
-Température : <span id="tempInt">--</span> °C<br>
-Humidité : <span id="humInt">--</span> %
-</div>
-
-<button onclick="logout()">Déconnexion</button>
-
+  <button onclick="logout()">Déconnexion</button>
 </div>
 
 <script type="module">
-
+// ---------- Firebase Imports ----------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, get }
+import { getDatabase, ref, onValue, set, get } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+// ---------- Config Firebase ----------
 const firebaseConfig = {
   apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
   authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -92,102 +117,133 @@ const firebaseConfig = {
   appId: "1:88549628626:web:0f8ae72085e727e6452b0b"
 };
 
+// ---------- Init Firebase ----------
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
 
 let userRole = null;
 
-window.login = function(){
-signInWithEmailAndPassword(auth,email.value,password.value)
-.catch(err=>alert(err.message))
+// ---------- Auth Functions ----------
+
+// Login Email/Password
+window.login = function() {
+  signInWithEmailAndPassword(auth, email.value, password.value)
+    .then(() => loginDiv.style.display="none")
+    .catch(err => alert("Erreur connexion : " + err.message));
 }
 
-window.signup = async function(){
+// Login Google
+window.loginWithGoogle = async function(){
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-try{
+    // Créer l’utilisateur si nouveau
+    const userRef = ref(db, "users/" + user.uid);
+    const snap = await get(userRef);
+    if(!snap.exists()){
+      await set(userRef, { 
+        role: "user",
+        email: user.email,
+        displayName: user.displayName
+      });
+    }
 
-const userCredential = await createUserWithEmailAndPassword(auth,signupEmail.value,signupPassword.value);
-const user = userCredential.user;
+    loginDiv.style.display="none";
+    signupDiv.style.display="none";
+    personalInfoDiv.style.display="none";
+    app.style.display="block";
 
-await set(ref(db,"users/"+user.uid),{role:"user"});
-
-alert("Compte créé");
-document.getElementById("goToAccount").style.display="inline-block";
-
-}catch(error){
-
-alert(error.message);
-
+  } catch(error) {
+    alert("Erreur Google Sign-In : " + error.message);
+  }
 }
 
+// Inscription Email/Password
+window.signup = async function() {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
+    const user = userCredential.user;
+
+    // Afficher le formulaire infos personnelles
+    signupDiv.style.display = "none";
+    personalInfoDiv.style.display = "block";
+
+  } catch(error) {
+    alert("Erreur inscription : " + error.message);
+  }
 }
 
-window.goToAccount=function(){
+// Sauvegarder infos personnelles
+window.savePersonalInfo = async function() {
+  const firstName = document.getElementById("firstName").value;
+  const lastName = document.getElementById("lastName").value;
+  const age = document.getElementById("age").value;
 
-loginDiv.style.display="none";
-signupDiv.style.display="none";
-app.style.display="block";
+  const user = auth.currentUser;
+  if(!user) return alert("Utilisateur non connecté !");
 
+  await set(ref(db, "users/" + user.uid), {
+    role: "user",
+    firstName,
+    lastName,
+    age,
+    email: user.email
+  });
+
+  personalInfoDiv.style.display = "none";
+  app.style.display = "block";
 }
 
-window.logout=function(){
-
-signOut(auth).then(()=>location.reload());
-
+// Aller au compte après inscription
+window.goToAccount = function() {
+  loginDiv.style.display="none";
+  signupDiv.style.display="none";
+  app.style.display="block";
 }
 
+// Logout
+window.logout = function() {
+  signOut(auth).then(() => location.reload());
+}
+
+// ---------- Station Météo ----------
 function initStation(user){
+  if(!user) return;
 
-if(!user) return;
+  get(ref(db, "users/" + user.uid)).then(roleSnap => {
+    userRole = roleSnap.val().role;
+    btnLampe.style.display = (userRole === "admin") ? "inline-block" : "none";
+  });
 
-get(ref(db,"users/"+user.uid)).then(roleSnap=>{
-
-userRole=roleSnap.val().role;
-btnLampe.style.display=(userRole==="admin")?"inline-block":"none";
-
-})
-
-const stationRef=ref(db,"station");
-
-onValue(stationRef,snapshot=>{
-
-const data=snapshot.val()||{};
-
-if(data.exterieur){
-
-tempExt.innerText=data.exterieur.temperature??"--";
-humExt.innerText=data.exterieur.humidite??"--";
-
+  const stationRef = ref(db,"station");
+  onValue(stationRef, snapshot => {
+    const data = snapshot.val() || {};
+    if(data.exterieur){
+      tempExt.innerText = data.exterieur.temperature ?? "--";
+      humExt.innerText = data.exterieur.humidite ?? "--";
+    }
+    if(data.interieur){
+      tempInt.innerText = data.interieur.temperature ?? "--";
+      humInt.innerText = data.interieur.humidite ?? "--";
+    }
+  });
 }
 
-if(data.interieur){
+// Sur changement d’état Auth
+onAuthStateChanged(auth, initStation);
 
-tempInt.innerText=data.interieur.temperature??"--";
-humInt.innerText=data.interieur.humidite??"--";
-
-}
-
-})
-
-}
-
-onAuthStateChanged(auth,initStation);
-
+// ---------- Lampe ----------
 window.toggleLampe = async function(){
-
-if(userRole==="admin"){
-
-const lampeRef=ref(db,"station/lampe");
-const snap=await get(lampeRef);
-
-set(lampeRef,!snap.val());
-
-}
-
+  if(userRole === "admin"){
+    const lampeRef = ref(db,"station/lampe");
+    const snap = await get(lampeRef);
+    set(lampeRef, !snap.val());
+  }
 }
 
 </script>
-
 </body>
 </html>
