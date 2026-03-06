@@ -38,7 +38,6 @@ button:hover {
 }
 #app, #personalInfoDiv, #logoutBtn, #adminDiv, #adminTools { display: none; }
 #loginDiv, #signupDiv { margin-top: 30px; }
-#goToAccount { display: block; margin: 20px auto; }
 #calendarDiv { margin-top: 20px; }
 </style>
 </head>
@@ -62,7 +61,7 @@ button:hover {
   <button onclick="signup()">S’inscrire</button>
 </div>
 
-<!-- Connexion Admin (toujours visible sur la page de connexion) -->
+<!-- Connexion Admin -->
 <div id="adminDiv" class="card">
   <h3>Connexion Admin</h3>
   <input type="email" id="adminEmail" placeholder="Email admin"><br>
@@ -84,9 +83,6 @@ button:hover {
   <input type="number" id="age" placeholder="Âge"><br>
   <button onclick="savePersonalInfo()">Valider</button>
 </div>
-
-<!-- Aller au compte -->
-<button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 
 <!-- Interface principale -->
 <div id="app">
@@ -133,13 +129,13 @@ const loginDiv = document.getElementById("loginDiv");
 const signupDiv = document.getElementById("signupDiv");
 const personalInfoDiv = document.getElementById("personalInfoDiv");
 const appDiv = document.getElementById("app");
-const logoutBtn = document.getElementById("logoutBtn");
 const tempExt = document.getElementById("tempExt");
 const humExt = document.getElementById("humExt");
 const tempInt = document.getElementById("tempInt");
 const humInt = document.getElementById("humInt");
 const dateData = document.getElementById("dateData");
 const btnLampe = document.getElementById("btnLampe");
+const logoutBtn = document.getElementById("logoutBtn");
 
 const adminDiv = document.getElementById("adminDiv");
 const adminTools = document.getElementById("adminTools");
@@ -153,7 +149,7 @@ window.signup = async function() {
     const userCredential = await createUserWithEmailAndPassword(auth,email,password);
     signupDiv.style.display = "none";
     personalInfoDiv.style.display = "block";
-  } catch(err) { alert("Erreur inscription : "+err.message); }
+  } catch(err){ alert("Erreur inscription : "+err.message); }
 }
 
 window.savePersonalInfo = async function() {
@@ -165,6 +161,7 @@ window.savePersonalInfo = async function() {
   await set(ref(db,"users/"+user.uid),{role:"user", firstName, lastName, age, email:user.email});
   personalInfoDiv.style.display = "none";
   appDiv.style.display = "block";
+  logoutBtn.style.display = "block";
   initStation(user);
 }
 
@@ -178,18 +175,10 @@ window.login = function(){
       signupDiv.style.display="none";
       personalInfoDiv.style.display="none";
       appDiv.style.display="block";
+      logoutBtn.style.display="block";
       initStation(userCred.user);
     })
     .catch(err=>alert("Erreur connexion : "+err.message));
-}
-
-window.goToAccount = function(){
-  loginDiv.style.display="none";
-  signupDiv.style.display="none";
-  personalInfoDiv.style.display="none";
-  appDiv.style.display="block";
-  const user = auth.currentUser;
-  if(user) initStation(user);
 }
 
 // ------------------ ADMIN ------------------
@@ -203,7 +192,9 @@ window.adminLogin = function(){
       adminTools.style.display="block";
       loginDiv.style.display = "none";
       signupDiv.style.display = "none";
+      personalInfoDiv.style.display = "none";
       appDiv.style.display = "block";
+      logoutBtn.style.display = "block";
     })
     .catch(err=>alert("Erreur admin : "+err.message));
 }
@@ -226,12 +217,11 @@ function initStation(user){
     tempInt.innerText = data.interieur?.temperature ?? "--";
     humInt.innerText = data.interieur?.humidite ?? "--";
 
-    // Historique
+    const lampe = data.lampe ?? false;
+    updateLampeButton(lampe);
+
     const today = new Date().toISOString().slice(0,10);
     set(ref(db,"historique/"+today),{exterieur:data.exterieur||{},interieur:data.interieur||{}});
-
-    // Lampe
-    updateLampeButton(data.lampe ?? false);
   });
 
   const lampeRef = ref(db,"station/lampe");
@@ -247,7 +237,6 @@ window.toggleLampe = async function(){
   updateLampeButton(newEtat);
 }
 
-// Mise à jour bouton lampe
 function updateLampeButton(etat){
   btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
   btnLampe.style.background = etat ? "green":"red";
@@ -268,18 +257,18 @@ window.loadDateData = async function(){
   }
 }
 
-// Déconnexion ramène à la page login
+// Déconnexion
 window.logout = function(){
   signOut(auth).then(()=>{
-    location.reload();
     loginDiv.style.display = "block";
     signupDiv.style.display = "block";
     personalInfoDiv.style.display = "none";
     appDiv.style.display = "none";
+    logoutBtn.style.display = "none";
   });
 }
 
-onAuthStateChanged(auth,user=>{ if(user) initStation(user); });
+onAuthStateChanged(auth,user=>{ if(user) { appDiv.style.display="block"; logoutBtn.style.display="block"; initStation(user); } });
 
 </script>
 </body>
