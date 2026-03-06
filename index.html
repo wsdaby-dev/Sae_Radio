@@ -250,6 +250,8 @@ window.logout = function(){
     personalInfoDiv.style.display = "none";
     appDiv.style.display = "none";
     logoutBtn.style.display = "none";
+    adminLoginDiv.style.display = "block";
+    adminPanel.style.display = "none";
   });
 }
 
@@ -321,21 +323,27 @@ window.logoutAdmin = function(){
   });
 }
 
-// Vérification session Firebase
+// ---------- ON AUTH STATE CHANGE ----------
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const snap = await get(ref(db, "users/" + user.uid));
+  if(user){
+    const snap = await get(ref(db,"users/"+user.uid));
     const data = snap.val();
 
-    if (data?.role === "admin") {
-      adminLoginDiv.style.display = "none";
+    // MASQUER FORMULAIRE ADMIN TOUJOURS
+    adminLoginDiv.style.display = "none";
+
+    if(data?.role === "admin"){
+      // Admin connecté
       adminPanel.style.display = "block";
       loginDiv.style.display = "none";
       signupDiv.style.display = "none";
       personalInfoDiv.style.display = "none";
       appDiv.style.display = "none";
+      logoutBtn.style.display = "none";
       loadUsersList();
     } else {
+      // Utilisateur normal connecté
+      adminPanel.style.display = "none";
       loginDiv.style.display = "none";
       signupDiv.style.display = "none";
       personalInfoDiv.style.display = "none";
@@ -344,13 +352,14 @@ onAuthStateChanged(auth, async (user) => {
       initStation(user);
     }
   } else {
+    // Aucun utilisateur connecté
+    adminLoginDiv.style.display = "block";
+    adminPanel.style.display = "none";
     loginDiv.style.display = "block";
     signupDiv.style.display = "block";
     personalInfoDiv.style.display = "none";
     appDiv.style.display = "none";
     logoutBtn.style.display = "none";
-    adminLoginDiv.style.display = "block";
-    adminPanel.style.display = "none";
   }
 });
 </script>
