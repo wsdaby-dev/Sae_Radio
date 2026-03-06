@@ -14,7 +14,7 @@ body {
   padding: 0;
 }
 
-h1 { margin-top: 30px; }
+h1 { margin-top: 20px; }
 
 .card {
   background: #111;
@@ -22,16 +22,16 @@ h1 { margin-top: 30px; }
   border-radius: 15px;
   padding: 20px;
   margin: 20px auto;
-  width: 250px;
+  width: 320px;
   box-shadow: 0 0 15px #00ff00;
 }
 
-input, button {
+input, button, select {
   background: black;
   color: #00ff00;
   border: 2px solid #00ff00;
   padding: 10px;
-  margin: 10px;
+  margin: 5px;
   border-radius: 8px;
   font-size: 16px;
 }
@@ -44,7 +44,8 @@ button:hover {
 
 #app, #personalInfoDiv { display: none; }
 #loginDiv, #signupDiv { margin-top: 30px; }
-#goToAccount { display: none; }
+#goToAccount { display: block; margin: 20px auto; }
+#calendarDiv { margin-top: 20px; }
 </style>
 </head>
 
@@ -67,7 +68,6 @@ button:hover {
   <input type="email" id="signupEmail" placeholder="Email"><br>
   <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
   <button onclick="signup()">S’inscrire</button>
-  <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 </div>
 
 <!-- Formulaire Infos personnelles -->
@@ -79,20 +79,24 @@ button:hover {
   <button onclick="savePersonalInfo()">Valider</button>
 </div>
 
+<!-- Aller au compte -->
+<button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
+
 <!-- Interface Station Météo -->
 <div id="app">
-  <button onclick="toggleLampe()" id="btnLampe">Lampe ON / OFF</button>
-
   <div class="card">
-    <h2>Extérieur</h2>
-    <p>Température : <span id="tempExt">--</span> °C</p>
-    <p>Humidité : <span id="humExt">--</span> %</p>
+    <h2>Station Météo</h2>
+    <p>Extérieur : Température <span id="tempExt">--</span>°C / Humidité <span id="humExt">--</span>%</p>
+    <p>Intérieur : Température <span id="tempInt">--</span>°C / Humidité <span id="humInt">--</span>%</p>
+    <button id="btnLampe" onclick="toggleLampe()">Lampe ON / OFF</button>
   </div>
 
-  <div class="card">
-    <h2>Intérieur</h2>
-    <p>Température : <span id="tempInt">--</span> °C</p>
-    <p>Humidité : <span id="humInt">--</span> %</p>
+  <!-- Calendrier -->
+  <div id="calendarDiv" class="card">
+    <h3>Consulter les données météo par date</h3>
+    <input type="date" id="datePicker">
+    <button onclick="loadDateData()">Voir données</button>
+    <div id="dateData" style="margin-top:10px;"></div>
   </div>
 
   <button onclick="logout()">Déconnexion</button>
@@ -103,7 +107,7 @@ button:hover {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, get } 
+import { getDatabase, ref, onValue, set, get, push } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // ---------- Config Firebase ----------
@@ -122,69 +126,49 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const provider = new GoogleAuthProvider();
-
 let userRole = null;
 
 // ---------- Auth Functions ----------
-
-// Login Email/Password
 window.login = function() {
   signInWithEmailAndPassword(auth, email.value, password.value)
-    .then(() => loginDiv.style.display="none")
     .catch(err => alert("Erreur connexion : " + err.message));
 }
 
-// Login Google
 window.loginWithGoogle = async function(){
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-
-    // Créer l’utilisateur si nouveau
     const userRef = ref(db, "users/" + user.uid);
     const snap = await get(userRef);
     if(!snap.exists()){
-      await set(userRef, { 
-        role: "user",
-        email: user.email,
-        displayName: user.displayName
-      });
+      await set(userRef, { role: "user", email: user.email, displayName: user.displayName });
     }
-
     loginDiv.style.display="none";
     signupDiv.style.display="none";
     personalInfoDiv.style.display="none";
     app.style.display="block";
-
   } catch(error) {
     alert("Erreur Google Sign-In : " + error.message);
   }
 }
 
-// Inscription Email/Password
 window.signup = async function() {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
-    const user = userCredential.user;
-
-    // Afficher le formulaire infos personnelles
-    signupDiv.style.display = "none";
-    personalInfoDiv.style.display = "block";
-
+    signupDiv.style.display="none";
+    personalInfoDiv.style.display="block";
   } catch(error) {
     alert("Erreur inscription : " + error.message);
   }
 }
 
-// Sauvegarder infos personnelles
 window.savePersonalInfo = async function() {
   const firstName = document.getElementById("firstName").value;
   const lastName = document.getElementById("lastName").value;
   const age = document.getElementById("age").value;
-
   const user = auth.currentUser;
   if(!user) return alert("Utilisateur non connecté !");
-
+  
   await set(ref(db, "users/" + user.uid), {
     role: "user",
     firstName,
@@ -197,14 +181,13 @@ window.savePersonalInfo = async function() {
   app.style.display = "block";
 }
 
-// Aller au compte après inscription
 window.goToAccount = function() {
   loginDiv.style.display="none";
   signupDiv.style.display="none";
+  personalInfoDiv.style.display="none";
   app.style.display="block";
 }
 
-// Logout
 window.logout = function() {
   signOut(auth).then(() => location.reload());
 }
@@ -213,11 +196,13 @@ window.logout = function() {
 function initStation(user){
   if(!user) return;
 
+  // Récupérer role utilisateur
   get(ref(db, "users/" + user.uid)).then(roleSnap => {
     userRole = roleSnap.val().role;
     btnLampe.style.display = (userRole === "admin") ? "inline-block" : "none";
   });
 
+  // Lecture station en temps réel + stockage historique
   const stationRef = ref(db,"station");
   onValue(stationRef, snapshot => {
     const data = snapshot.val() || {};
@@ -229,11 +214,15 @@ function initStation(user){
       tempInt.innerText = data.interieur.temperature ?? "--";
       humInt.innerText = data.interieur.humidite ?? "--";
     }
+
+    // Sauvegarde historique par date
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    set(ref(db, "historique/" + today), {
+      exterieur: data.exterieur || {},
+      interieur: data.interieur || {}
+    });
   });
 }
-
-// Sur changement d’état Auth
-onAuthStateChanged(auth, initStation);
 
 // ---------- Lampe ----------
 window.toggleLampe = async function(){
@@ -243,6 +232,26 @@ window.toggleLampe = async function(){
     set(lampeRef, !snap.val());
   }
 }
+
+// ---------- Calendrier ----------
+window.loadDateData = async function(){
+  const date = document.getElementById("datePicker").value;
+  if(!date) return alert("Choisir une date !");
+  const dateRef = ref(db, "historique/" + date);
+  const snap = await get(dateRef);
+  if(!snap.exists()){
+    dateData.innerHTML = "Pas de données pour cette date";
+  } else {
+    const d = snap.val();
+    dateData.innerHTML = `
+      <strong>Extérieur :</strong> Température ${d.exterieur.temperature}°C / Humidité ${d.exterieur.humidite}%<br>
+      <strong>Intérieur :</strong> Température ${d.interieur.temperature}°C / Humidité ${d.interieur.humidite}%
+    `;
+  }
+}
+
+// Sur changement Auth
+onAuthStateChanged(auth, initStation);
 
 </script>
 </body>
