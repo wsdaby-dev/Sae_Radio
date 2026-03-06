@@ -6,35 +6,35 @@
 
 <style>
 body {
-  background: #000;
-  color: #00ff00;
+  background: #f5f5f5;
+  color: #222;
   font-family: Arial, sans-serif;
   text-align: center;
   margin: 0;
   padding: 0;
 }
-h1 { margin-top: 20px; }
+h1 { margin-top: 20px; color: #333; }
 .card {
-  background: #111;
-  border: 2px solid #00ff00;
+  background: #fff;
+  border: 2px solid #00aaff;
   border-radius: 15px;
   padding: 20px;
   margin: 20px auto;
   width: 360px;
-  box-shadow: 0 0 20px #00ff00;
+  box-shadow: 0 0 15px #00aaff33;
 }
 input, button, select {
-  background: black;
-  color: #00ff00;
-  border: 2px solid #00ff00;
+  background: #f5f5f5;
+  color: #222;
+  border: 2px solid #00aaff;
   padding: 10px;
   margin: 5px;
   border-radius: 8px;
   font-size: 16px;
 }
 button:hover {
-  background: #00ff00;
-  color: black;
+  background: #00aaff;
+  color: #fff;
   cursor: pointer;
 }
 #app, #personalInfoDiv, #logoutBtn, #adminDiv { display: none; }
@@ -130,6 +130,11 @@ let userRole = null;
 // -------------------- Utilisateur --------------------
 window.login = function() {
   signInWithEmailAndPassword(auth, email.value, password.value)
+    .then(() => {
+      loginDiv.style.display = "none";
+      signupDiv.style.display = "none";
+      app.style.display = "block";
+    })
     .catch(err => alert("Erreur connexion : " + err.message));
 }
 
@@ -177,25 +182,14 @@ window.logout = function() {
 function initStation(user) {
   if(!user) return;
 
-  logoutBtn.style.display = "inline-block";
-  goToAccount.style.display = "block";
-
-  get(ref(db, "users/" + user.uid)).then(roleSnap => {
-    userRole = roleSnap.val().role;
-  });
-
   const stationRef = ref(db,"station");
   onValue(stationRef, snapshot => {
     const data = snapshot.val() || {};
-    if(data.exterieur){
-      tempExt.innerText = data.exterieur.temperature ?? "--";
-      humExt.innerText = data.exterieur.humidite ?? "--";
-    }
-    if(data.interieur){
-      tempInt.innerText = data.interieur.temperature ?? "--";
-      humInt.innerText = data.interieur.humidite ?? "--";
-    }
-    // Historique
+    tempExt.innerText = data.exterieur?.temperature ?? "--";
+    humExt.innerText = data.exterieur?.humidite ?? "--";
+    tempInt.innerText = data.interieur?.temperature ?? "--";
+    humInt.innerText = data.interieur?.humidite ?? "--";
+
     const today = new Date().toISOString().slice(0,10);
     set(ref(db, "historique/" + today), {
       exterieur: data.exterieur || {},
