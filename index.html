@@ -44,7 +44,7 @@ button:hover {
 #loginDiv, #signupDiv, #adminLoginDiv { margin-top: 30px; }
 #calendarDiv { margin-top: 20px; }
 #btnLampe { min-width: 120px; font-weight: bold; }
-#dateData { margin-top:10px; font-weight:bold; }
+#dateData { margin-top:10px; font-weight:bold; color: #222; }
 </style>
 </head>
 
@@ -264,18 +264,24 @@ window.adminLogin = async function(){
     const uid = userCred.user.uid;
     const userSnap = await get(ref(db,"users/"+uid));
     const data = userSnap.val();
+
     if(!data || data.role !== "admin") {
       alert("Vous n'êtes pas administrateur !");
       await signOut(auth);
       return;
     }
 
+    // Masquer formulaire admin
+    adminLoginDiv.style.display = "none";
+
+    // Afficher panneau admin
+    adminPanel.style.display = "block";
+
+    // Masquer sections utilisateur
     loginDiv.style.display = "none";
     signupDiv.style.display = "none";
     personalInfoDiv.style.display = "none";
     appDiv.style.display = "none";
-    adminLoginDiv.style.display = "none";
-    adminPanel.style.display = "block";
 
     loadUsersList();
   } catch(err){
@@ -315,23 +321,36 @@ window.logoutAdmin = function(){
   });
 }
 
-// Vérifier si déjà connecté
-onAuthStateChanged(auth,user=>{ 
-  if(user) { 
-    const userSnap = get(ref(db,"users/"+user.uid)).then(snap=>{
-      const data = snap.val();
-      if(data?.role === "admin"){
-        adminLoginDiv.style.display="none";
-        adminPanel.style.display="block";
-      } else {
-        loginDiv.style.display="none";
-        signupDiv.style.display="none";
-        personalInfoDiv.style.display="none";
-        appDiv.style.display="block"; 
-        logoutBtn.style.display="block";
-        initStation(user);
-      }
-    });
+// Vérification session Firebase
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const snap = await get(ref(db, "users/" + user.uid));
+    const data = snap.val();
+
+    if (data?.role === "admin") {
+      adminLoginDiv.style.display = "none";
+      adminPanel.style.display = "block";
+      loginDiv.style.display = "none";
+      signupDiv.style.display = "none";
+      personalInfoDiv.style.display = "none";
+      appDiv.style.display = "none";
+      loadUsersList();
+    } else {
+      loginDiv.style.display = "none";
+      signupDiv.style.display = "none";
+      personalInfoDiv.style.display = "none";
+      appDiv.style.display = "block";
+      logoutBtn.style.display = "block";
+      initStation(user);
+    }
+  } else {
+    loginDiv.style.display = "block";
+    signupDiv.style.display = "block";
+    personalInfoDiv.style.display = "none";
+    appDiv.style.display = "none";
+    logoutBtn.style.display = "none";
+    adminLoginDiv.style.display = "block";
+    adminPanel.style.display = "none";
   }
 });
 </script>
