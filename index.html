@@ -46,7 +46,7 @@ button:hover {
 <body>
 <h1>🌡 Station Météo</h1>
 
-<!-- Login Utilisateur -->
+<!-- Login -->
 <div id="loginDiv" class="card">
   <h3>Connexion Utilisateur</h3>
   <input type="email" id="email" placeholder="Email"><br>
@@ -54,7 +54,7 @@ button:hover {
   <button onclick="login()">Se connecter</button>
 </div>
 
-<!-- Signup Utilisateur -->
+<!-- Signup -->
 <div id="signupDiv" class="card">
   <h3>Créer un compte</h3>
   <input type="email" id="signupEmail" placeholder="Email"><br>
@@ -62,7 +62,7 @@ button:hover {
   <button onclick="signup()">S’inscrire</button>
 </div>
 
-<!-- Formulaire infos personnelles -->
+<!-- Infos personnelles -->
 <div id="personalInfoDiv" class="card">
   <h3>Informations personnelles</h3>
   <input type="text" id="firstName" placeholder="Prénom"><br>
@@ -74,13 +74,13 @@ button:hover {
 <!-- Aller au compte -->
 <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 
-<!-- Interface Utilisateur -->
+<!-- Interface -->
 <div id="app">
   <div class="card">
     <h2>Station Météo</h2>
     <p>Extérieur : Température <span id="tempExt">--</span>°C / Humidité <span id="humExt">--</span>%</p>
     <p>Intérieur : Température <span id="tempInt">--</span>°C / Humidité <span id="humInt">--</span>%</p>
-    <button id="btnLampe" onclick="toggleLampe()">Lampe ON / OFF</button>
+    <button id="btnLampe" onclick="toggleLampe()">OFF</button>
   </div>
 
   <!-- Calendrier -->
@@ -95,7 +95,7 @@ button:hover {
 </div>
 
 <script type="module">
-// Sécuriser le DOM pour éviter undefined
+// DOM sécurisé
 const loginDiv = document.getElementById("loginDiv") || {};
 const signupDiv = document.getElementById("signupDiv") || {};
 const personalInfoDiv = document.getElementById("personalInfoDiv") || {};
@@ -107,13 +107,14 @@ const humExt = document.getElementById("humExt") || {};
 const tempInt = document.getElementById("tempInt") || {};
 const humInt = document.getElementById("humInt") || {};
 const dateData = document.getElementById("dateData") || {};
+const btnLampe = document.getElementById("btnLampe") || {};
 
 // Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Config Firebase
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
   authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -137,12 +138,11 @@ window.login = function() {
 
   signInWithEmailAndPassword(auth, emailVal, passwordVal)
     .then(userCredential => {
-      const user = userCredential.user;
       loginDiv.style.display = "none";
       signupDiv.style.display = "none";
       personalInfoDiv.style.display = "none";
       appDiv.style.display = "block";
-      initStation(user);
+      initStation(userCredential.user);
     })
     .catch(err => alert("Erreur connexion : " + err.message));
 }
@@ -167,7 +167,7 @@ window.savePersonalInfo = async function() {
   const age = document.getElementById("age").value;
   const user = auth.currentUser;
   if(!user) return alert("Utilisateur non connecté !");
-  
+
   await set(ref(db, "users/" + user.uid), {
     role: "user",
     firstName,
@@ -205,12 +205,15 @@ function initStation(user) {
     tempInt.innerText = data.interieur?.temperature ?? "--";
     humInt.innerText = data.interieur?.humidite ?? "--";
 
-    // Historique pour calendrier
+    // Historique
     const today = new Date().toISOString().slice(0,10);
     set(ref(db, "historique/" + today), {
       exterieur: data.exterieur || {},
       interieur: data.interieur || {}
     });
+
+    // Mettre à jour le bouton lampe selon état
+    btnLampe.innerText = data.lampe ? "ON" : "OFF";
   });
 }
 
@@ -218,7 +221,9 @@ function initStation(user) {
 window.toggleLampe = async function() {
   const lampeRef = ref(db,"station/lampe");
   const snap = await get(lampeRef);
-  set(lampeRef, !snap.val());
+  const newState = !snap.val();
+  await set(lampeRef, newState);
+  btnLampe.innerText = newState ? "ON" : "OFF";
 }
 
 // Calendrier
