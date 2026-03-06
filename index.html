@@ -40,8 +40,8 @@ button:hover {
   cursor: pointer;
 }
 
-#app, #personalInfoDiv, #logoutBtn { display: none; }
-#loginDiv, #signupDiv { margin-top: 30px; }
+#app, #personalInfoDiv, #logoutBtn, #adminPanel { display: none; }
+#loginDiv, #signupDiv, #adminLoginDiv { margin-top: 30px; }
 #calendarDiv { margin-top: 20px; }
 #btnLampe { min-width: 120px; font-weight: bold; }
 #dateData { margin-top:10px; font-weight:bold; }
@@ -51,7 +51,7 @@ button:hover {
 <body>
 <h1>🌡 Station Météo</h1>
 
-<!-- Connexion -->
+<!-- Connexion Utilisateur -->
 <div id="loginDiv" class="card">
   <h3>Connexion Utilisateur</h3>
   <input type="email" id="email" placeholder="Email"><br>
@@ -59,7 +59,7 @@ button:hover {
   <button onclick="login()">Se connecter</button>
 </div>
 
-<!-- Inscription -->
+<!-- Inscription Utilisateur -->
 <div id="signupDiv" class="card">
   <h3>Créer un compte</h3>
   <input type="email" id="signupEmail" placeholder="Email"><br>
@@ -76,7 +76,7 @@ button:hover {
   <button onclick="savePersonalInfo()">Valider</button>
 </div>
 
-<!-- Interface principale -->
+<!-- Interface Utilisateur -->
 <div id="app">
   <div class="card">
     <h2>Station Météo</h2>
@@ -94,6 +94,21 @@ button:hover {
   </div>
 
   <button id="logoutBtn" onclick="logout()" style="margin-top:20px; background:#ff4d4d; color:white;">Déconnexion</button>
+</div>
+
+<!-- Connexion Admin -->
+<div id="adminLoginDiv" class="card">
+  <h3>Connexion Administrateur</h3>
+  <input type="email" id="adminEmail" placeholder="Email Admin"><br>
+  <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
+  <button onclick="adminLogin()">Se connecter Admin</button>
+</div>
+
+<!-- Interface Admin -->
+<div id="adminPanel" class="card">
+  <h3>Panel Administrateur</h3>
+  <div id="usersList"></div>
+  <button onclick="logoutAdmin()" style="margin-top:10px; background:#ff4d4d; color:white;">Déconnexion Admin</button>
 </div>
 
 <script type="module">
@@ -128,6 +143,8 @@ const humInt = document.getElementById("humInt");
 const dateData = document.getElementById("dateData");
 const btnLampe = document.getElementById("btnLampe");
 const logoutBtn = document.getElementById("logoutBtn");
+const adminLoginDiv = document.getElementById("adminLoginDiv");
+const adminPanel = document.getElementById("adminPanel");
 
 // ---------- UTILISATEUR ----------
 window.signup = async function() {
@@ -225,7 +242,7 @@ window.loadDateData = async function(){
   }
 }
 
-// Déconnexion
+// Déconnexion utilisateur
 window.logout = function(){
   signOut(auth).then(()=>{
     loginDiv.style.display = "block";
@@ -236,16 +253,86 @@ window.logout = function(){
   });
 }
 
+// ---------- ADMIN ----------
+window.adminLogin = async function(){
+  const email = document.getElementById("adminEmail").value;
+  const password = document.getElementById("adminPassword").value;
+  if(!email || !password) return alert("Email et mot de passe requis");
+
+  try {
+    const userCred = await signInWithEmailAndPassword(auth,email,password);
+    const uid = userCred.user.uid;
+    const userSnap = await get(ref(db,"users/"+uid));
+    const data = userSnap.val();
+    if(!data || data.role !== "admin") {
+      alert("Vous n'êtes pas administrateur !");
+      await signOut(auth);
+      return;
+    }
+
+    loginDiv.style.display = "none";
+    signupDiv.style.display = "none";
+    personalInfoDiv.style.display = "none";
+    appDiv.style.display = "none";
+    adminLoginDiv.style.display = "none";
+    adminPanel.style.display = "block";
+
+    loadUsersList();
+  } catch(err){
+    alert("Erreur connexion admin : "+err.message);
+  }
+}
+
+async function loadUsersList(){
+  const snap = await get(ref(db,"users"));
+  const usersDiv = document.getElementById("usersList");
+  usersDiv.innerHTML = "";
+  if(!snap.exists()){ usersDiv.innerHTML = "Aucun utilisateur"; return; }
+
+  const users = snap.val();
+  for(const uid in users){
+    if(users[uid].role === "admin") continue;
+    const div = document.createElement("div");
+    div.style.margin="5px 0";
+    div.innerHTML = `
+      ${users[uid].firstName ?? ""} ${users[uid].lastName ?? ""} (${users[uid].email})
+      <button onclick="deleteUser('${uid}')">Supprimer</button>
+    `;
+    usersDiv.appendChild(div);
+  }
+}
+
+window.deleteUser = async function(uid){
+  if(!confirm("Supprimer cet utilisateur ?")) return;
+  await set(ref(db,"users/"+uid), null);
+  loadUsersList();
+}
+
+window.logoutAdmin = function(){
+  signOut(auth).then(()=>{
+    adminLoginDiv.style.display = "block";
+    adminPanel.style.display = "none";
+  });
+}
+
 // Vérifier si déjà connecté
 onAuthStateChanged(auth,user=>{ 
   if(user) { 
-    loginDiv.style.display="none"; 
-    signupDiv.style.display="none"; 
-    personalInfoDiv.style.display="none";
-    appDiv.style.display="block"; 
-    logoutBtn.style.display="block"; 
-    initStation(user); 
-  } 
+    const userSnap = get(ref(db,"users/"+user.uid)).then(snap=>{
+      const data = snap.val();
+      if(data?.role === "admin"){
+        adminLoginDiv.style.display="none";
+        adminPanel.style.display="block";
+      } else {
+        loginDiv.style.display="none";
+        signupDiv.style.display="none";
+        personalInfoDiv.style.display="none";
+        appDiv.style.display="block"; 
+        logoutBtn.style.display="block";
+        initStation(user);
+      }
+    });
+  }
 });
 </script>
 </body>
