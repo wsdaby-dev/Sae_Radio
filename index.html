@@ -5,101 +5,83 @@
 <title>Station Météo</title>
 
 <style>
-/* ---------- CSS ---------- */
-body {
-  background: #000;
-  color: #00ff00;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
+body{
+  background:#000;
+  color:#00ff00;
+  font-family:Arial;
+  text-align:center;
 }
 
-h1 { margin-top: 30px; }
-
-.card {
-  background: #111;
-  border: 2px solid #00ff00;
-  border-radius: 15px;
-  padding: 20px;
-  margin: 20px auto;
-  width: 250px;
-  box-shadow: 0 0 15px #00ff00;
+.card{
+  background:#111;
+  border:2px solid #00ff00;
+  border-radius:15px;
+  padding:20px;
+  margin:20px auto;
+  width:250px;
 }
 
-input, button {
-  background: black;
-  color: #00ff00;
-  border: 2px solid #00ff00;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 8px;
-  font-size: 16px;
+input,button{
+  background:black;
+  color:#00ff00;
+  border:2px solid #00ff00;
+  padding:10px;
+  margin:10px;
+  border-radius:8px;
 }
 
-button:hover {
-  background: #00ff00;
-  color: black;
-  cursor: pointer;
-}
-
-#app { display: none; }
-#loginDiv, #signupDiv { margin-top: 30px; }
-#goToAccount { display: none; }
+#app{display:none;}
+#goToAccount{display:none;}
 </style>
 </head>
 
 <body>
 
-<h1>🌡 Station Météo</h1>
+<h1>🌡 Station météo</h1>
 
-<!-- Formulaire Login -->
 <div id="loginDiv">
-  <h3>Connexion</h3>
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Mot de passe"><br>
-  <button onclick="login()">Se connecter</button>
+<h3>Connexion</h3>
+<input id="email" type="email" placeholder="email"><br>
+<input id="password" type="password" placeholder="mot de passe"><br>
+<button onclick="login()">Connexion</button>
 </div>
 
-<!-- Formulaire Inscription -->
 <div id="signupDiv">
-  <h3>Créer un compte</h3>
-  <input type="email" id="signupEmail" placeholder="Email"><br>
-  <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
-  <button onclick="signup()">S’inscrire</button>
-  <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
+<h3>Créer un compte</h3>
+<input id="signupEmail" type="email" placeholder="email"><br>
+<input id="signupPassword" type="password" placeholder="mot de passe"><br>
+<button onclick="signup()">Inscription</button>
+<button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 </div>
 
-<!-- Interface Station Météo -->
 <div id="app">
-  <button onclick="toggleLampe()" id="btnLampe">Lampe ON / OFF</button>
 
-  <div class="card">
-    <h2>Extérieur</h2>
-    <p>Température : <span id="tempExt">--</span> °C</p>
-    <p>Humidité : <span id="humExt">--</span> %</p>
-  </div>
+<button id="btnLampe" onclick="toggleLampe()">Lampe ON/OFF</button>
 
-  <div class="card">
-    <h2>Intérieur</h2>
-    <p>Température : <span id="tempInt">--</span> °C</p>
-    <p>Humidité : <span id="humInt">--</span> %</p>
-  </div>
+<div class="card">
+<h2>Extérieur</h2>
+Température : <span id="tempExt">--</span> °C<br>
+Humidité : <span id="humExt">--</span> %
+</div>
 
-  <button onclick="logout()">Déconnexion</button>
+<div class="card">
+<h2>Intérieur</h2>
+Température : <span id="tempInt">--</span> °C<br>
+Humidité : <span id="humInt">--</span> %
+</div>
+
+<button onclick="logout()">Déconnexion</button>
+
 </div>
 
 <script type="module">
-// ---------- JS ----------
 
-// Import Firebase depuis CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } 
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, get } 
+import { getDatabase, ref, onValue, set, get }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// 🔑 Config Firebase réelle
 const firebaseConfig = {
   apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
   authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -107,92 +89,104 @@ const firebaseConfig = {
   projectId: "saeradio-4cb75",
   storageBucket: "saeradio-4cb75.appspot.com",
   messagingSenderId: "88549628626",
-  appId: "1:88549628626:web:0f8ae72085e727e6452b0b",
-  measurementId: "G-8BHDY0Y8D8"
+  appId: "1:88549628626:web:0f8ae72085e727e6452b0b"
 };
 
-// Initialisation Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
 let userRole = null;
 
-// ---------- AUTH ----------
-
-// Login
-window.login = function() {
-  signInWithEmailAndPassword(auth, email.value, password.value)
-  .catch(err => alert("Erreur connexion : " + err.message));
+window.login = function(){
+signInWithEmailAndPassword(auth,email.value,password.value)
+.catch(err=>alert(err.message))
 }
 
-// Inscription
-window.signup = async function() {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
-    const user = userCredential.user;
+window.signup = async function(){
 
-    await set(ref(db, "users/" + user.uid), { role: "user" });
+try{
 
-    alert("Compte créé ! Cliquez sur 'Aller au compte' pour accéder à l'interface.");
-    document.getElementById("goToAccount").style.display = "inline-block";
+const userCredential = await createUserWithEmailAndPassword(auth,signupEmail.value,signupPassword.value);
+const user = userCredential.user;
 
-    signupEmail.value = "";
-    signupPassword.value = "";
-  } catch(error) {
-    alert("Erreur inscription : " + error.message);
-  }
+await set(ref(db,"users/"+user.uid),{role:"user"});
+
+alert("Compte créé");
+document.getElementById("goToAccount").style.display="inline-block";
+
+}catch(error){
+
+alert(error.message);
+
 }
 
-// Aller au compte après inscription
-window.goToAccount = function() {
-  loginDiv.style.display = "none";
-  signupDiv.style.display = "none";
-  app.style.display = "block";
-  onAuthStateChanged(auth, initStation);
 }
 
-// Logout
-window.logout = function() {
-  signOut(auth).then(() => location.reload());
+window.goToAccount=function(){
+
+loginDiv.style.display="none";
+signupDiv.style.display="none";
+app.style.display="block";
+
 }
 
-// ---------- STATION METEO ----------
+window.logout=function(){
+
+signOut(auth).then(()=>location.reload());
+
+}
+
 function initStation(user){
-  if(!user) return;
 
-  // Récupérer role utilisateur
-  get(ref(db, "users/" + user.uid)).then(roleSnap => {
-    userRole = roleSnap.val().role;
-    btnLampe.style.display = (userRole === "admin") ? "inline-block" : "none";
-  });
+if(!user) return;
 
-  // Lecture station en temps réel
-  const stationRef = ref(db,"station");
-  onValue(stationRef, snapshot => {
-    const data = snapshot.val() || {};
-    if(data.exterieur){
-      tempExt.innerText = data.exterieur.temperature ?? "--";
-      humExt.innerText = data.exterieur.humidite ?? "--";
-    }
-    if(data.interieur){
-      tempInt.innerText = data.interieur.temperature ?? "--";
-      humInt.innerText = data.interieur.humidite ?? "--";
-    }
-  });
+get(ref(db,"users/"+user.uid)).then(roleSnap=>{
+
+userRole=roleSnap.val().role;
+btnLampe.style.display=(userRole==="admin")?"inline-block":"none";
+
+})
+
+const stationRef=ref(db,"station");
+
+onValue(stationRef,snapshot=>{
+
+const data=snapshot.val()||{};
+
+if(data.exterieur){
+
+tempExt.innerText=data.exterieur.temperature??"--";
+humExt.innerText=data.exterieur.humidite??"--";
+
 }
 
-// Sur changement d’état Auth
-onAuthStateChanged(auth, initStation);
+if(data.interieur){
 
-// ---------- LAMPE ----------
+tempInt.innerText=data.interieur.temperature??"--";
+humInt.innerText=data.interieur.humidite??"--";
+
+}
+
+})
+
+}
+
+onAuthStateChanged(auth,initStation);
+
 window.toggleLampe = async function(){
-  if(userRole === "admin"){
-    const lampeRef = ref(db,"station/lampe");
-    const snap = await get(lampeRef);
-    set(lampeRef, !snap.val());
-  }
+
+if(userRole==="admin"){
+
+const lampeRef=ref(db,"station/lampe");
+const snap=await get(lampeRef);
+
+set(lampeRef,!snap.val());
+
 }
+
+}
+
 </script>
 
 </body>
