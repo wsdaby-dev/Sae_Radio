@@ -46,7 +46,7 @@ button:hover {
 <body>
 <h1>🌡 Station Météo</h1>
 
-<!-- Login -->
+<!-- Login utilisateur -->
 <div id="loginDiv" class="card">
   <h3>Connexion Utilisateur</h3>
   <input type="email" id="email" placeholder="Email"><br>
@@ -54,7 +54,7 @@ button:hover {
   <button onclick="login()">Se connecter</button>
 </div>
 
-<!-- Signup -->
+<!-- Inscription utilisateur -->
 <div id="signupDiv" class="card">
   <h3>Créer un compte</h3>
   <input type="email" id="signupEmail" placeholder="Email"><br>
@@ -74,7 +74,7 @@ button:hover {
 <!-- Aller au compte -->
 <button id="goToAccount" onclick="goToAccount()">Aller au compte</button>
 
-<!-- Interface -->
+<!-- Interface principale -->
 <div id="app">
   <div class="card">
     <h2>Station Météo</h2>
@@ -94,27 +94,26 @@ button:hover {
   <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
-<script type="module">
-// DOM sécurisé
-const loginDiv = document.getElementById("loginDiv") || {};
-const signupDiv = document.getElementById("signupDiv") || {};
-const personalInfoDiv = document.getElementById("personalInfoDiv") || {};
-const appDiv = document.getElementById("app") || {};
-const logoutBtn = document.getElementById("logoutBtn") || {};
-const goToAccountBtn = document.getElementById("goToAccount") || {};
-const tempExt = document.getElementById("tempExt") || {};
-const humExt = document.getElementById("humExt") || {};
-const tempInt = document.getElementById("tempInt") || {};
-const humInt = document.getElementById("humInt") || {};
-const dateData = document.getElementById("dateData") || {};
-const btnLampe = document.getElementById("btnLampe") || {};
+<!-- Interface admin -->
+<div id="adminDiv" class="card">
+  <h3>Connexion Admin</h3>
+  <input type="email" id="adminEmail" placeholder="Email admin"><br>
+  <input type="password" id="adminPassword" placeholder="Mot de passe admin"><br>
+  <button onclick="adminLogin()">Se connecter</button>
+  <div id="adminTools" style="margin-top:15px; display:none;">
+    <h3>Gestion des utilisateurs</h3>
+    <input type="text" id="userToDelete" placeholder="UID utilisateur à supprimer"><br>
+    <button onclick="deleteUser()">Supprimer utilisateur</button>
+  </div>
+</div>
 
-// Firebase imports
+<script type="module">
+// Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Firebase config
+// Config Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
   authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -130,34 +129,34 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// -------------------- Utilisateur --------------------
-window.login = function() {
-  const emailVal = document.getElementById("email").value;
-  const passwordVal = document.getElementById("password").value;
-  if(!emailVal || !passwordVal) return alert("Email et mot de passe requis");
+// DOM
+const loginDiv = document.getElementById("loginDiv");
+const signupDiv = document.getElementById("signupDiv");
+const personalInfoDiv = document.getElementById("personalInfoDiv");
+const appDiv = document.getElementById("app");
+const logoutBtn = document.getElementById("logoutBtn");
+const goToAccountBtn = document.getElementById("goToAccount");
+const tempExt = document.getElementById("tempExt");
+const humExt = document.getElementById("humExt");
+const tempInt = document.getElementById("tempInt");
+const humInt = document.getElementById("humInt");
+const dateData = document.getElementById("dateData");
+const btnLampe = document.getElementById("btnLampe");
 
-  signInWithEmailAndPassword(auth, emailVal, passwordVal)
-    .then(userCredential => {
-      loginDiv.style.display = "none";
-      signupDiv.style.display = "none";
-      personalInfoDiv.style.display = "none";
-      appDiv.style.display = "block";
-      initStation(userCredential.user);
-    })
-    .catch(err => alert("Erreur connexion : " + err.message));
-}
+const adminDiv = document.getElementById("adminDiv");
+const adminTools = document.getElementById("adminTools");
 
+// ------------------ UTILISATEUR ------------------
 window.signup = async function() {
   const email = document.getElementById("signupEmail").value;
   const password = document.getElementById("signupPassword").value;
   if(!email || !password) return alert("Email et mot de passe requis");
-
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
     signupDiv.style.display = "none";
     personalInfoDiv.style.display = "block";
-  } catch(error) {
-    alert("Erreur inscription : " + error.message);
+  } catch(err) {
+    alert("Erreur inscription : " + err.message);
   }
 }
 
@@ -167,39 +166,71 @@ window.savePersonalInfo = async function() {
   const age = document.getElementById("age").value;
   const user = auth.currentUser;
   if(!user) return alert("Utilisateur non connecté !");
-
-  await set(ref(db, "users/" + user.uid), {
-    role: "user",
-    firstName,
-    lastName,
-    age,
-    email: user.email
+  await set(ref(db,"users/"+user.uid),{
+    role:"user", firstName, lastName, age, email:user.email
   });
-
   personalInfoDiv.style.display = "none";
   appDiv.style.display = "block";
   initStation(user);
 }
 
-window.goToAccount = function() {
-  loginDiv.style.display = "none";
-  signupDiv.style.display = "none";
-  personalInfoDiv.style.display = "none";
-  appDiv.style.display = "block";
+window.login = function(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  if(!email || !password) return alert("Email et mot de passe requis");
+  signInWithEmailAndPassword(auth,email,password)
+    .then(userCred=>{
+      loginDiv.style.display="none";
+      signupDiv.style.display="none";
+      personalInfoDiv.style.display="none";
+      appDiv.style.display="block";
+      initStation(userCred.user);
+    })
+    .catch(err=>alert("Erreur connexion : "+err.message));
+}
+
+window.goToAccount = function(){
+  loginDiv.style.display="none";
+  signupDiv.style.display="none";
+  personalInfoDiv.style.display="none";
+  appDiv.style.display="block";
   const user = auth.currentUser;
   if(user) initStation(user);
 }
 
-window.logout = function() {
-  signOut(auth).then(() => location.reload());
+window.logout = function(){
+  signOut(auth).then(()=>location.reload());
 }
 
-// -------------------- Station météo --------------------
-function initStation(user) {
+// ------------------ ADMIN ------------------
+window.adminLogin = function(){
+  const email = document.getElementById("adminEmail").value;
+  const password = document.getElementById("adminPassword").value;
+  if(!email || !password) return alert("Email et mot de passe requis");
+  signInWithEmailAndPassword(auth,email,password)
+    .then(userCred=>{
+      adminTools.style.display="block";
+      adminDiv.style.display="none";
+      alert("Connexion admin réussie !");
+    })
+    .catch(err=>alert("Erreur admin : "+err.message));
+}
+
+window.deleteUser = async function(){
+  const uid = document.getElementById("userToDelete").value;
+  if(!uid) return alert("Indiquer l'UID de l'utilisateur à supprimer !");
+  try{
+    await remove(ref(db,"users/"+uid));
+    alert("Utilisateur supprimé !");
+  } catch(err){ alert("Erreur suppression : "+err.message); }
+}
+
+// ------------------ STATION METEO ------------------
+function initStation(user){
   if(!user) return;
-  const stationRef = ref(db, "station");
-  onValue(stationRef, snapshot => {
-    const data = snapshot.val() || {};
+  const stationRef = ref(db,"station");
+  onValue(stationRef,snap=>{
+    const data = snap.val() || {};
     tempExt.innerText = data.exterieur?.temperature ?? "--";
     humExt.innerText = data.exterieur?.humidite ?? "--";
     tempInt.innerText = data.interieur?.temperature ?? "--";
@@ -207,32 +238,44 @@ function initStation(user) {
 
     // Historique
     const today = new Date().toISOString().slice(0,10);
-    set(ref(db, "historique/" + today), {
-      exterieur: data.exterieur || {},
-      interieur: data.interieur || {}
+    set(ref(db,"historique/"+today),{
+      exterieur:data.exterieur || {},
+      interieur:data.interieur || {}
     });
 
-    // Mettre à jour le bouton lampe selon état
-    btnLampe.innerText = data.lampe ? "ON" : "OFF";
+    // Lampe
+    updateLampeButton(data.lampe ?? false);
+  });
+
+  const lampeRef = ref(db,"station/lampe");
+  onValue(lampeRef, snapshot => {
+    updateLampeButton(snapshot.val());
   });
 }
 
-// Lampe
-window.toggleLampe = async function() {
+// Lampe ON/OFF
+window.toggleLampe = async function(){
   const lampeRef = ref(db,"station/lampe");
   const snap = await get(lampeRef);
-  const newState = !snap.val();
-  await set(lampeRef, newState);
-  btnLampe.innerText = newState ? "ON" : "OFF";
+  const newEtat = !snap.val();
+  await set(lampeRef,newEtat);
+  updateLampeButton(newEtat);
+}
+
+// Mise à jour bouton lampe
+function updateLampeButton(etat){
+  btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
+  btnLampe.style.background = etat ? "green":"red";
+  btnLampe.style.color="white";
 }
 
 // Calendrier
-window.loadDateData = async function() {
+window.loadDateData = async function(){
   const date = document.getElementById("datePicker").value;
   if(!date) return alert("Choisir une date !");
-  const snap = await get(ref(db, "historique/" + date));
+  const snap = await get(ref(db,"historique/"+date));
   if(!snap.exists()){
-    dateData.innerHTML = "Pas de données pour cette date";
+    dateData.innerHTML = '<span style="color:red;font-weight:bold;">⚠️ Pas de données pour cette date</span>';
   } else {
     const d = snap.val();
     dateData.innerHTML = `
@@ -242,7 +285,7 @@ window.loadDateData = async function() {
   }
 }
 
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth,user=>{
   if(user) initStation(user);
 });
 </script>
