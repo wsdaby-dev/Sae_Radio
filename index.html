@@ -342,22 +342,26 @@ function loadHistory() {
 
 // Admin
 function loadUsersList() {
-    usersList.innerHTML = "";
-    userCount.innerText = "Chargement...";
+    const usersDiv = document.getElementById("usersList");
+    const userCountDiv = document.getElementById("userCount");
+
+    usersDiv.innerHTML = "";
+    userCountDiv.innerText = "Chargement...";
 
     db.ref("users").once("value").then(snap => {
         if (!snap.exists()) {
-            usersList.innerHTML = "Aucun utilisateur";
-            userCount.innerText = "0 utilisateur";
+            usersDiv.innerHTML = "Aucun utilisateur";
+            userCountDiv.innerText = "0 utilisateur";
             return;
         }
 
-        let users = snap.val();
+        const users = snap.val();
         let count = 0;
 
-        for (let uid in users) {
-            let u = users[uid];
+        for (const uid in users) {
+            const u = users[uid];
 
+            // Sécurisation : valeurs par défaut
             const email = u.email || "Non renseigné";
             const username = u.username || "Inconnu";
             const age = u.age || "Non renseigné";
@@ -365,20 +369,29 @@ function loadUsersList() {
 
             count++;
 
-            usersList.innerHTML += `
-                <div style="border:1px solid #333; padding:10px; margin:10px;">
-                    <strong>${username}</strong><br>
-                    Email : ${email}<br>
-                    Âge : ${age}<br>
-                    Rôle : ${role}<br><br>
-                    <button onclick="deleteUser('${uid}')">Supprimer</button>
-                </div>
+            const div = document.createElement("div");
+            div.style.margin = "10px 0";
+            div.style.padding = "10px";
+            div.style.border = "1px solid #1f2937";
+            div.style.borderRadius = "10px";
+
+            div.innerHTML = `
+                <strong>${username}</strong><br>
+                Email : ${email}<br>
+                Âge : ${age}<br>
+                Rôle : ${role}<br><br>
+                <button onclick="deleteUser('${uid}')" style="background:#ef4444;border-color:#b91c1c;">
+                    Supprimer
+                </button>
             `;
+
+            usersDiv.appendChild(div);
         }
 
-        userCount.innerText = count + " utilisateur(s)";
+        userCountDiv.innerText = count + " utilisateur(s)";
     });
 }
+
 
 function deleteUser(uid) {
     if (!confirm("Supprimer ?")) return;
