@@ -24,13 +24,17 @@
     --muted: #9ca3af;
 }
 
+* { box-sizing: border-box; }
+
 body {
     margin: 0;
-    font-family: system-ui;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
     color: var(--text);
     text-align: center;
 }
+
+h1 { margin-top: 20px; }
 
 .card {
     background: var(--card-bg);
@@ -40,6 +44,7 @@ body {
     margin: 20px auto;
     width: 380px;
     max-width: 95vw;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.4);
 }
 
 input, button {
@@ -49,12 +54,14 @@ input, button {
     padding: 10px;
     margin: 5px;
     border-radius: 10px;
+    font-size: 15px;
     width: 80%;
 }
 
 button {
     background: var(--primary);
     border-color: var(--primary-dark);
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -63,6 +70,16 @@ button:hover { background: var(--primary-dark); }
 #logoutBtn, #logoutAdminBtn {
     background: var(--danger);
     border-color: #b91c1c;
+}
+
+.choice-btn {
+    width: 80%;
+    max-width: 320px;
+    display: block;
+    margin: 10px auto;
+    padding: 12px;
+    border-radius: 999px;
+    font-size: 16px;
 }
 
 .graph-container {
@@ -74,25 +91,38 @@ button:hover { background: var(--primary-dark); }
     width: 95%;
     max-width: 900px;
 }
+
+.graph-title {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-align: left;
+}
 </style>
 </head>
 <body>
 <h1>🌤 Station Météo</h1>
+<!-- Accueil -->
 <div id="homeChoice" class="card">
     <h3>Bienvenue</h3>
-    <button id="btnGoUser">Connexion utilisateur</button>
-    <button id="btnGoAdmin">Connexion administrateur</button>
+    <p style="color:var(--muted); font-size:14px;">
+        Choisissez votre type de connexion.
+    </p>
+    <button class="choice-btn" id="btnGoUser">👤 Connexion utilisateur</button>
+    <button class="choice-btn" id="btnGoAdmin">🛡️ Connexion administrateur</button>
 </div>
 
+<!-- Connexion utilisateur -->
 <div id="loginUserDiv" class="card" style="display:none;">
     <h3>Connexion utilisateur</h3>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Mot de passe">
     <button onclick="login()">Se connecter</button>
     <button onclick="showSignup()">Créer un compte</button>
-    <button onclick="backToHome()">Retour</button>
+    <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
+<!-- Inscription -->
 <div id="signupDiv" class="card" style="display:none;">
     <h3>Créer un compte</h3>
     <input type="email" id="signupEmail" placeholder="Email">
@@ -100,39 +130,51 @@ button:hover { background: var(--primary-dark); }
     <input type="text" id="signupUsername" placeholder="Nom d'utilisateur">
     <input type="number" id="signupAge" placeholder="Âge">
     <button onclick="signup()">S'inscrire</button>
-    <button onclick="backToLoginUser()">Retour</button>
+    <button onclick="backToLoginUser()">⬅ Retour</button>
 </div>
 
+<!-- Connexion admin -->
 <div id="loginAdminDiv" class="card" style="display:none;">
     <h3>Connexion administrateur</h3>
     <input type="email" id="adminEmail" placeholder="Email admin">
     <input type="password" id="adminPassword" placeholder="Mot de passe">
-    <button onclick="adminLogin()">Se connecter</button>
-    <button onclick="backToHome()">Retour</button>
+    <button onclick="adminLogin()">Se connecter admin</button>
+    <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
+<!-- Interface utilisateur -->
 <div id="app" style="display:none;">
     <div class="card">
-        <h2>Temps réel</h2>
+        <h2>Vue en temps réel</h2>
         <div>Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span> %</div>
         <div>Intérieur : <span id="tempInt">--</span> °C / <span id="humInt">--</span> %</div>
         <button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button>
     </div>
 
     <div class="card">
-        <h3>Historique</h3>
+        <h3>Historique par date</h3>
         <input type="date" id="historyDate">
-        <button onclick="loadHistory()">Charger</button>
-        <p id="historyStatus"></p>
+        <button onclick="loadHistory()">Charger l'historique</button>
+        <p id="historyStatus" style="color:var(--muted); font-size:13px;"></p>
     </div>
 
-    <div class="graph-container"><canvas id="chartTempInt"></canvas></div>
-    <div class="graph-container"><canvas id="chartTempExt"></canvas></div>
-    <div class="graph-container"><canvas id="chartHum"></canvas></div>
+    <div class="graph-container">
+        <div class="graph-title">Température intérieure (°C)</div>
+        <canvas id="chartTempInt"></canvas>
+    </div>
+    <div class="graph-container">
+        <div class="graph-title">Température extérieure (°C)</div>
+        <canvas id="chartTempExt"></canvas>
+    </div>
+    <div class="graph-container">
+        <div class="graph-title">Humidité (%)</div>
+        <canvas id="chartHum"></canvas>
+    </div>
 
     <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
+<!-- Panel admin -->
 <div id="adminPanel" class="card" style="display:none;">
     <h3>Panel administrateur</h3>
     <h4 id="userCount"></h4>
@@ -140,6 +182,7 @@ button:hover { background: var(--primary-dark); }
     <button id="logoutAdminBtn" onclick="logout()">Déconnexion admin</button>
 </div>
 <script>
+// ---------------------- Firebase ----------------------
 var firebaseConfig = {
     apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
     authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -152,142 +195,253 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 var auth = firebase.auth();
-var db = firebase.database();
+var db   = firebase.database();
 
-var homeChoice = document.getElementById("homeChoice");
-var loginUserDiv = document.getElementById("loginUserDiv");
+// ---------------------- DOM ----------------------
+var homeChoice    = document.getElementById("homeChoice");
+var loginUserDiv  = document.getElementById("loginUserDiv");
 var loginAdminDiv = document.getElementById("loginAdminDiv");
-var signupDiv = document.getElementById("signupDiv");
-var appDiv = document.getElementById("app");
-var adminPanel = document.getElementById("adminPanel");
+var signupDiv     = document.getElementById("signupDiv");
+var appDiv        = document.getElementById("app");
+var adminPanel    = document.getElementById("adminPanel");
 
-document.getElementById("btnGoUser").onclick = () => {
-    homeChoice.style.display = "none";
+var tempExt = document.getElementById("tempExt");
+var humExt  = document.getElementById("humExt");
+var tempInt = document.getElementById("tempInt");
+var humInt  = document.getElementById("humInt");
+var btnLampe= document.getElementById("btnLampe");
+
+var historyDate   = document.getElementById("historyDate");
+var historyStatus = document.getElementById("historyStatus");
+
+// ---------------------- Navigation ----------------------
+document.getElementById("btnGoUser").addEventListener("click", function() {
+    homeChoice.style.display   = "none";
     loginUserDiv.style.display = "block";
-};
-
-document.getElementById("btnGoAdmin").onclick = () => {
-    homeChoice.style.display = "none";
+});
+document.getElementById("btnGoAdmin").addEventListener("click", function() {
+    homeChoice.style.display    = "none";
     loginAdminDiv.style.display = "block";
-};
+});
 
 function backToHome() {
-    homeChoice.style.display = "block";
-    loginUserDiv.style.display = "none";
+    homeChoice.style.display    = "block";
+    loginUserDiv.style.display  = "none";
     loginAdminDiv.style.display = "none";
-    signupDiv.style.display = "none";
-    appDiv.style.display = "none";
-    adminPanel.style.display = "none";
+    signupDiv.style.display     = "none";
+    appDiv.style.display        = "none";
+    adminPanel.style.display    = "none";
 }
-
 function showSignup() {
     loginUserDiv.style.display = "none";
-    signupDiv.style.display = "block";
+    signupDiv.style.display    = "block";
 }
-
 function backToLoginUser() {
-    signupDiv.style.display = "none";
+    signupDiv.style.display    = "none";
     loginUserDiv.style.display = "block";
 }
+window.backToHome      = backToHome;
+window.showSignup      = showSignup;
+window.backToLoginUser = backToLoginUser;
 
+// ---------------------- Inscription ----------------------
 function signup() {
-    var email = signupEmail.value;
-    var pass = signupPassword.value;
-    var username = signupUsername.value;
-    var age = signupAge.value;
+    var email    = document.getElementById("signupEmail").value;
+    var password = document.getElementById("signupPassword").value;
+    var username = document.getElementById("signupUsername").value;
+    var age      = document.getElementById("signupAge").value;
 
-    auth.createUserWithEmailAndPassword(email, pass)
-        .then(cred => {
+    if (!email || !password || !username || !age) {
+        alert("Tous les champs sont obligatoires");
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(function(cred) {
             return db.ref("users/" + cred.user.uid).set({
-                email: email,
+                role: "user",
                 username: username,
                 age: age,
-                role: "user"
+                email: email
             });
         })
-        .then(() => {
+        .then(function() {
             signupDiv.style.display = "none";
-            appDiv.style.display = "block";
+            appDiv.style.display    = "block";
             initStation();
             initCharts();
+        })
+        .catch(function(err) {
+            alert("Erreur inscription : " + err.message);
         });
 }
+window.signup = signup;
 
+// ---------------------- Connexion utilisateur ----------------------
 function login() {
-    auth.signInWithEmailAndPassword(email.value, password.value)
-        .then(() => {
+    var email    = document.getElementById("email").value;
+    var password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        alert("Email et mot de passe requis");
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, password)
+        .then(function() {
             loginUserDiv.style.display = "none";
-            appDiv.style.display = "block";
+            appDiv.style.display       = "block";
             initStation();
             initCharts();
+        })
+        .catch(function(err) {
+            alert("Erreur connexion : " + err.message);
         });
 }
+window.login = login;
 
+// ---------------------- Connexion admin ----------------------
 function adminLogin() {
-    auth.signInWithEmailAndPassword(adminEmail.value, adminPassword.value)
-        .then(cred => {
-            db.ref("users/" + cred.user.uid).once("value").then(s => {
-                if (s.val().role !== "admin") {
-                    alert("Pas admin");
+    var email    = document.getElementById("adminEmail").value;
+    var password = document.getElementById("adminPassword").value;
+
+    if (!email || !password) {
+        alert("Email et mot de passe requis");
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, password)
+        .then(function(cred) {
+            var uid = cred.user.uid;
+            db.ref("users/" + uid).once("value").then(function(snap) {
+                var data = snap.val();
+                if (!data || data.role !== "admin") {
+                    alert("Vous n'êtes pas administrateur");
                     auth.signOut();
                     return;
                 }
                 loginAdminDiv.style.display = "none";
-                adminPanel.style.display = "block";
+                adminPanel.style.display    = "block";
                 loadUsersList();
             });
+        })
+        .catch(function(err) {
+            alert("Erreur admin : " + err.message);
         });
 }
+window.adminLogin = adminLogin;
 
+// ---------------------- Déconnexion ----------------------
 function logout() {
-    auth.signOut().then(backToHome);
+    auth.signOut().then(function() {
+        backToHome();
+    });
 }
-var chartTempInt, chartTempExt, chartHum;
-var realtimeLabels = [];
-var realtimeIntData = [];
-var realtimeExtData = [];
-var realtimeHumData = [];
-var chartsInitialized = false;
+window.logout = logout;
+// ---------------------- Graphes Chart.js ----------------------
+var chartTempInt = null;
+var chartTempExt = null;
+var chartHum     = null;
+
+var realtimeLabels   = [];
+var realtimeIntData  = [];
+var realtimeExtData  = [];
+var realtimeHumData  = [];
 
 function initCharts() {
+    // Détruire les anciens graphes si existent
+    if (chartTempInt) { chartTempInt.destroy(); chartTempInt = null; }
+    if (chartTempExt) { chartTempExt.destroy(); chartTempExt = null; }
+    if (chartHum)     { chartHum.destroy();     chartHum     = null; }
 
-    if (chartsInitialized) {
-        if (chartTempInt) chartTempInt.destroy();
-        if (chartTempExt) chartTempExt.destroy();
-        if (chartHum) chartHum.destroy();
-    }
+    var ctxInt = document.getElementById("chartTempInt").getContext("2d");
+    var ctxExt = document.getElementById("chartTempExt").getContext("2d");
+    var ctxHum = document.getElementById("chartHum").getContext("2d");
 
-    chartsInitialized = true;
-
-    chartTempInt = new Chart(chartTempInt.getContext("2d"), {
+    chartTempInt = new Chart(ctxInt, {
         type: "line",
-        data: { labels: realtimeLabels, datasets: [{ data: realtimeIntData, borderColor: "orange" }] }
+        data: {
+            labels: realtimeLabels,
+            datasets: [{
+                label: "Température intérieure",
+                data: realtimeIntData,
+                borderColor: "#f97316",
+                backgroundColor: "rgba(249,115,22,0.15)",
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true }
     });
 
-    chartTempExt = new Chart(chartTempExt.getContext("2d"), {
+    chartTempExt = new Chart(ctxExt, {
         type: "line",
-        data: { labels: realtimeLabels, datasets: [{ data: realtimeExtData, borderColor: "blue" }] }
+        data: {
+            labels: realtimeLabels,
+            datasets: [{
+                label: "Température extérieure",
+                data: realtimeExtData,
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59,130,246,0.15)",
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true }
     });
 
-    chartHum = new Chart(chartHum.getContext("2d"), {
+    chartHum = new Chart(ctxHum, {
         type: "line",
-        data: { labels: realtimeLabels, datasets: [{ data: realtimeHumData, borderColor: "green" }] }
+        data: {
+            labels: realtimeLabels,
+            datasets: [{
+                label: "Humidité",
+                data: realtimeHumData,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.15)",
+                tension: 0.3
+            }]
+        },
+        options: { responsive: true }
     });
 }
 
+// ---------------------- Station météo temps réel ----------------------
+var stationListenerAttached = false;
+
 function initStation() {
-    db.ref("station").on("value", snap => {
-        var d = snap.val() || {};
+    if (stationListenerAttached) return;
+    stationListenerAttached = true;
 
-        tempExt.innerText = d.exterieur?.temperature ?? "--";
-        humExt.innerText = d.exterieur?.humidite ?? "--";
+    var stationRef = db.ref("station");
+    stationRef.on("value", function(snap) {
+        var data = snap.val() || {};
 
-        tempInt.innerText = d.interieur?.temperature ?? "--";
-        humInt.innerText = d.interieur?.humidite ?? "--";
+        if (data.exterieur) {
+            tempExt.innerText = (data.exterieur.temperature != null ? data.exterieur.temperature : "--");
+            humExt.innerText  = (data.exterieur.humidite  != null ? data.exterieur.humidite  : "--");
+        } else {
+            tempExt.innerText = "--";
+            humExt.innerText  = "--";
+        }
 
-        btnLampe.innerText = d.lampe ? "Lampe : ON" : "Lampe : OFF";
+        if (data.interieur) {
+            tempInt.innerText = (data.interieur.temperature != null ? data.interieur.temperature : "--");
+            humInt.innerText  = (data.interieur.humidite  != null ? data.interieur.humidite  : "--");
+        } else {
+            tempInt.innerText = "--";
+            humInt.innerText  = "--";
+        }
 
-        var now = new Date().toLocaleTimeString();
+        if (data.lampe === true) {
+            btnLampe.innerText = "Lampe : ON";
+        } else {
+            btnLampe.innerText = "Lampe : OFF";
+        }
+
+        // Mise à jour graphes temps réel
+        var now = new Date();
+        var label = now.getHours().toString().padStart(2, "0") + ":" +
+                    now.getMinutes().toString().padStart(2, "0") + ":" +
+                    now.getSeconds().toString().padStart(2, "0");
 
         if (realtimeLabels.length > 50) {
             realtimeLabels.shift();
@@ -296,12 +450,12 @@ function initStation() {
             realtimeHumData.shift();
         }
 
-        realtimeLabels.push(now);
-        realtimeIntData.push(d.interieur?.temperature ?? null);
-        realtimeExtData.push(d.exterieur?.temperature ?? null);
-        realtimeHumData.push(d.interieur?.humidite ?? null);
+        realtimeLabels.push(label);
+        realtimeIntData.push(data.interieur && data.interieur.temperature != null ? data.interieur.temperature : null);
+        realtimeExtData.push(data.exterieur && data.exterieur.temperature != null ? data.exterieur.temperature : null);
+        realtimeHumData.push(data.interieur && data.interieur.humidite != null ? data.interieur.humidite : null);
 
-        if (chartsInitialized) {
+        if (chartTempInt && chartTempExt && chartHum) {
             chartTempInt.update();
             chartTempExt.update();
             chartHum.update();
@@ -310,93 +464,172 @@ function initStation() {
 }
 
 function toggleLampe() {
-    db.ref("station/lampe").once("value").then(s => {
-        db.ref("station/lampe").set(!s.val());
+    var lampeRef = db.ref("station/lampe");
+    lampeRef.once("value").then(function(snap) {
+        var current = snap.val();
+        var newEtat = !current;
+        lampeRef.set(newEtat);
+        btnLampe.innerText = newEtat ? "Lampe : ON" : "Lampe : OFF";
     });
 }
+window.toggleLampe = toggleLampe;
 
+// ---------------------- Historique par date ----------------------
 function loadHistory() {
     var date = historyDate.value;
-    if (!date) return;
+    if (!date) {
+        alert("Choisissez une date");
+        return;
+    }
 
-    db.ref("historique/" + date).once("value").then(snap => {
+    historyStatus.innerText = "Chargement de l'historique pour " + date + "...";
+
+    db.ref("historique/" + date).once("value").then(function(snap) {
         if (!snap.exists()) {
-            historyStatus.innerText = "Aucune donnée";
+            historyStatus.innerText = "Aucune donnée pour cette date.";
             return;
         }
 
         var data = snap.val();
+        var labels = [];
+        var intTemps = [];
+        var extTemps = [];
+        var hums = [];
+
         var keys = Object.keys(data).sort();
 
-        realtimeLabels.length = 0;
+        keys.forEach(function(k) {
+            var point = data[k];
+            labels.push(k);
+
+            if (point.interieur) {
+                intTemps.push(point.interieur.temperature != null ? point.interieur.temperature : null);
+                hums.push(point.interieur.humidite != null ? point.interieur.humidite : null);
+            } else {
+                intTemps.push(null);
+                hums.push(null);
+            }
+
+            if (point.exterieur) {
+                extTemps.push(point.exterieur.temperature != null ? point.exterieur.temperature : null);
+            } else {
+                extTemps.push(null);
+            }
+        });
+
+        realtimeLabels.length  = 0;
         realtimeIntData.length = 0;
         realtimeExtData.length = 0;
         realtimeHumData.length = 0;
 
-        keys.forEach(k => {
-            realtimeLabels.push(k);
-            realtimeIntData.push(data[k].interieur?.temperature ?? null);
-            realtimeExtData.push(data[k].exterieur?.temperature ?? null);
-            realtimeHumData.push(data[k].interieur?.humidite ?? null);
-        });
+        Array.prototype.push.apply(realtimeLabels, labels);
+        Array.prototype.push.apply(realtimeIntData, intTemps);
+        Array.prototype.push.apply(realtimeExtData, extTemps);
+        Array.prototype.push.apply(realtimeHumData, hums);
 
-        chartTempInt.update();
-        chartTempExt.update();
-        chartHum.update();
+        if (chartTempInt && chartTempExt && chartHum) {
+            chartTempInt.update();
+            chartTempExt.update();
+            chartHum.update();
+        }
 
-        historyStatus.innerText = "Historique chargé";
+        historyStatus.innerText = "Historique chargé pour " + date + ".";
     });
 }
+window.loadHistory = loadHistory;
 
+// ---------------------- Panel admin ----------------------
 function loadUsersList() {
-    usersList.innerHTML = "";
-    db.ref("users").once("value").then(snap => {
+    var usersDiv     = document.getElementById("usersList");
+    var userCountDiv = document.getElementById("userCount");
+
+    usersDiv.innerHTML     = "";
+    userCountDiv.innerHTML = "Chargement...";
+
+    db.ref("users").once("value").then(function(snap) {
+        if (!snap.exists()) {
+            usersDiv.innerHTML     = "Aucun utilisateur";
+            userCountDiv.innerHTML = "0 utilisateur";
+            return;
+        }
+
         var users = snap.val();
         var count = 0;
 
         for (var uid in users) {
             var u = users[uid];
+            if (!u || !u.email) continue;
+
             count++;
 
-            usersList.innerHTML += `
-                <div style="border:1px solid #333; padding:10px; margin:10px;">
-                    <strong>${u.username}</strong><br>
-                    Email : ${u.email}<br>
-                    Âge : ${u.age}<br>
-                    Rôle : ${u.role}<br><br>
-                    <button onclick="deleteUser('${uid}')">Supprimer</button>
-                </div>
-            `;
+            var div = document.createElement("div");
+            div.style.margin       = "10px 0";
+            div.style.padding      = "10px";
+            div.style.border       = "1px solid #1f2937";
+            div.style.borderRadius = "10px";
+
+            div.innerHTML = ""
+                + "<strong>" + (u.username || "") + "</strong><br>"
+                + "Email : " + u.email + "<br>"
+                + "Âge : " + (u.age || "?") + "<br>"
+                + "Rôle : " + (u.role || "user") + "<br><br>"
+                + "<button onclick=\"deleteUser('" + uid + "')\" "
+                + "style=\"background:#ef4444;border-color:#b91c1c;\">Supprimer</button>";
+
+            usersDiv.appendChild(div);
         }
 
-        userCount.innerText = count + " utilisateur(s)";
+        userCountDiv.innerHTML = count + " utilisateur(s)";
+    }).catch(function(err) {
+        usersDiv.innerHTML     = "Erreur de chargement";
+        userCountDiv.innerHTML = "Erreur";
+        console.error("Erreur loadUsersList:", err);
     });
 }
 
 function deleteUser(uid) {
-    if (!confirm("Supprimer ?")) return;
-    db.ref("users/" + uid).remove().then(loadUsersList);
+    if (!confirm("Supprimer cet utilisateur ?")) return;
+
+    db.ref("users/" + uid).remove()
+        .then(function() {
+            alert("Utilisateur supprimé");
+            loadUsersList();
+        })
+        .catch(function(err) {
+            alert("Erreur : " + err.message);
+        });
 }
+window.deleteUser = deleteUser;
 
-auth.onAuthStateChanged(user => {
-    if (!user) return backToHome();
+// ---------------------- Auth state ----------------------
+auth.onAuthStateChanged(function(user) {
+    if (!user) {
+        backToHome();
+        return;
+    }
 
-    db.ref("users/" + user.uid).once("value").then(s => {
-        var d = s.val();
-
-        if (d.role === "admin") {
-            homeChoice.style.display = "none";
-            adminPanel.style.display = "block";
+    db.ref("users/" + user.uid).once("value").then(function(snap) {
+        var data = snap.val();
+        if (data && data.role === "admin") {
+            homeChoice.style.display    = "none";
+            loginUserDiv.style.display  = "none";
+            loginAdminDiv.style.display = "none";
+            signupDiv.style.display     = "none";
+            appDiv.style.display        = "none";
+            adminPanel.style.display    = "block";
             loadUsersList();
         } else {
-            homeChoice.style.display = "none";
-            appDiv.style.display = "block";
+            homeChoice.style.display    = "none";
+            loginUserDiv.style.display  = "none";
+            loginAdminDiv.style.display = "none";
+            signupDiv.style.display     = "none";
+            adminPanel.style.display    = "none";
+            appDiv.style.display        = "block";
             initStation();
             initCharts();
         }
     });
 });
 </script>
-
 </body>
 </html>
