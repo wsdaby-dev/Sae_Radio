@@ -8,57 +8,131 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+:root {
+    --primary: #00aaff;
+    --primary-dark: #0077cc;
+    --bg: #0b1220;
+    --card-bg: #111827;
+    --text: #e5e7eb;
+    --accent: #22c55e;
+    --danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    background: #f0f2f5;
-    color: #222;
-    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     text-align: center;
     margin: 0;
     padding: 0;
 }
-h1 { margin-top: 20px; color: #333; }
+
+h1 {
+    margin-top: 20px;
+    color: #f9fafb;
+    letter-spacing: 1px;
+    text-shadow: 0 0 15px #0ea5e9;
+}
+
+h2, h3 {
+    color: #e5e7eb;
+    margin-bottom: 10px;
+}
 
 .card {
-    background: #fff;
-    border: 2px solid #00aaff;
-    border-radius: 15px;
+    background: linear-gradient(145deg, #020617, #020617, #111827);
+    border: 1px solid #1f2937;
+    border-radius: 18px;
     padding: 20px;
     margin: 20px auto;
-    width: 360px;
-    box-shadow: 0 0 10px #00aaff33;
+    width: 380px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
 }
 
 input, button, select {
-    background: #fff;
-    color: #222;
-    border: 2px solid #00aaff;
+    background: #020617;
+    color: var(--text);
+    border: 1px solid #1f2937;
     padding: 10px;
     margin: 5px;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    width: 80%;
+}
+
+input::placeholder {
+    color: #6b7280;
+}
+
+button {
+    background: var(--primary);
+    border-color: var(--primary-dark);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: 0.15s;
 }
 
 button:hover {
-    background: #00aaff;
-    color: #fff;
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
     cursor: pointer;
 }
 
 #app, #personalInfoDiv, #logoutBtn, #adminPanel { display: none; }
 #loginDiv, #signupDiv, #adminLoginDiv { margin-top: 30px; }
 #calendarDiv { margin-top: 20px; }
-#btnLampe { min-width: 120px; font-weight: bold; }
-#dateData { margin-top:10px; font-weight:bold; color: #222; }
+#btnLampe { min-width: 160px; font-weight: bold; }
+#dateData { margin-top:10px; font-weight:bold; color: var(--text); }
+
+#logoutBtn {
+    background: var(--danger);
+    border-color: #b91c1c;
+}
+
+#logoutBtn:hover {
+    background: #b91c1c;
+}
+
+.value-line {
+    margin: 6px 0;
+    font-size: 15px;
+}
+
+.value-label {
+    color: #9ca3af;
+}
+
+.value-data {
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    margin-top: 5px;
+    background: rgba(15, 118, 110, 0.2);
+    border: 1px solid #0d9488;
+    color: #a5f3fc;
+}
 
 canvas {
     width: 100% !important;
-    height: 250px !important;
+    height: 220px !important;
+    margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
-<h1>Station Météo</h1>
+<h1>🌤 Station Météo Connectée</h1>
 
 <!-- Connexion Utilisateur -->
 <div id="loginDiv" class="card">
@@ -90,28 +164,45 @@ canvas {
 
     <!-- Carte météo -->
     <div class="card">
-        <h2>Station Météo</h2>
-        <p>Extérieur : Température <span id="tempExt">--</span>℃ / Humidité <span id="humExt">--</span>%</p>
-        <p>Intérieur : Température <span id="tempInt">--</span>℃ / Humidité <span id="humInt">--</span>%</p>
-        <button id="btnLampe" onclick="toggleLampe()">OFF</button>
+        <h2>Vue en temps réel</h2>
+        <div class="value-line">
+            <span class="value-label">Extérieur :</span>
+            <span class="value-data">
+                <span id="tempExt">--</span> °C /
+                <span id="humExt">--</span> %
+            </span>
+        </div>
+        <div class="value-line">
+            <span class="value-label">Intérieur :</span>
+            <span class="value-data">
+                <span id="tempInt">--</span> °C /
+                <span id="humInt">--</span> %
+            </span>
+        </div>
+        <div class="value-line">
+            <span class="value-label">Lampe :</span>
+            <span class="value-data"><button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button></span>
+        </div>
+        <div class="badge">Données mises à jour en temps réel via Firebase</div>
     </div>
 
     <!-- Dashboard Graphiques -->
     <div class="card">
-        <h3>Dashboard Graphiques</h3>
+        <h3>Graphiques Température</h3>
+        <small style="color:#9ca3af;">Évolution en temps réel des températures intérieure et extérieure</small>
         <canvas id="chartTempInt"></canvas>
         <canvas id="chartTempExt"></canvas>
     </div>
 
     <!-- Calendrier -->
     <div id="calendarDiv" class="card">
-        <h3>Consulter les données météo par date</h3>
+        <h3>Historique par date</h3>
         <input type="date" id="datePicker">
         <button onclick="loadDateData()">Voir données</button>
         <div id="dateData"></div>
     </div>
 
-    <button id="logoutBtn" onclick="logout()" style="margin-top:20px; background:#ff4d4d; color:white;">Déconnexion</button>
+    <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
 <!-- Connexion Admin -->
@@ -126,7 +217,7 @@ canvas {
 <div id="adminPanel" class="card">
     <h3>Panel Administrateur</h3>
     <div id="usersList"></div>
-    <button onclick="logoutAdmin()" style="margin-top:10px; background:#ff4d4d; color:white;">Déconnexion Admin</button>
+    <button onclick="logoutAdmin()">Déconnexion Admin</button>
 </div>
 
 <script type="module">
@@ -171,9 +262,19 @@ let chartInt = new Chart(document.getElementById("chartTempInt"), {
         datasets: [{
             label: "Température intérieure (°C)",
             data: [],
-            borderColor: "red",
-            borderWidth: 2
+            borderColor: "#f97316",
+            backgroundColor: "rgba(249,115,22,0.15)",
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2
         }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: "#e5e7eb" } } },
+        scales: {
+            x: { ticks: { color: "#9ca3af" }, grid: { color: "#1f2937" } },
+            y: { ticks: { color: "#9ca3af" }, grid: { color: "#1f2937" } }
+        }
     }
 });
 
@@ -184,9 +285,19 @@ let chartExt = new Chart(document.getElementById("chartTempExt"), {
         datasets: [{
             label: "Température extérieure (°C)",
             data: [],
-            borderColor: "blue",
-            borderWidth: 2
+            borderColor: "#38bdf8",
+            backgroundColor: "rgba(56,189,248,0.15)",
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 2
         }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: "#e5e7eb" } } },
+        scales: {
+            x: { ticks: { color: "#9ca3af" }, grid: { color: "#1f2937" } },
+            y: { ticks: { color: "#9ca3af" }, grid: { color: "#1f2937" } }
+        }
     }
 });
 
@@ -237,6 +348,7 @@ window.login = function () {
         .then(userCred => {
             loginDiv.style.display = "none";
             signupDiv.style.display = "none";
+            personalInfoDiv.style.display = "none";
             appDiv.style.display = "block";
             initStation(userCred.user);
         })
@@ -260,20 +372,35 @@ function initStation(user) {
         const lampe = data.lampe ?? false;
         updateLampeButton(lampe);
 
-        /* --- Ajout aux graphiques --- */
+        // Ajout aux graphiques
         const timeLabel = new Date().toLocaleTimeString();
 
         if (data.interieur?.temperature !== undefined) {
             chartInt.data.labels.push(timeLabel);
             chartInt.data.datasets[0].data.push(data.interieur.temperature);
+            if (chartInt.data.labels.length > 20) {
+                chartInt.data.labels.shift();
+                chartInt.data.datasets[0].data.shift();
+            }
             chartInt.update();
         }
 
         if (data.exterieur?.temperature !== undefined) {
             chartExt.data.labels.push(timeLabel);
             chartExt.data.datasets[0].data.push(data.exterieur.temperature);
+            if (chartExt.data.labels.length > 20) {
+                chartExt.data.labels.shift();
+                chartExt.data.datasets[0].data.shift();
+            }
             chartExt.update();
         }
+
+        // Historique du jour
+        const today = new Date().toISOString().slice(0, 10);
+        set(ref(db, "historique/" + today), {
+            exterieur: data.exterieur || {},
+            interieur: data.interieur || {}
+        });
     });
 }
 
@@ -288,8 +415,9 @@ window.toggleLampe = async function () {
 
 function updateLampeButton(etat) {
     btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
-    btnLampe.style.background = etat ? "green" : "red";
-    btnLampe.style.color = "white";
+    btnLampe.style.background = etat ? "#16a34a" : "#b91c1c";
+    btnLampe.style.borderColor = etat ? "#15803d" : "#7f1d1d";
+    btnLampe.style.color = "#f9fafb";
 }
 
 /* ---------------------- Historique ---------------------- */
@@ -297,7 +425,7 @@ window.loadDateData = async function () {
     const date = document.getElementById("datePicker").value;
 
     if (!date) {
-        dateData.style.color = "red";
+        dateData.style.color = "#f97316";
         dateData.innerHTML = "Veuillez choisir une date !";
         return;
     }
@@ -305,11 +433,11 @@ window.loadDateData = async function () {
     const snap = await get(ref(db, "historique/" + date));
 
     if (!snap.exists()) {
-        dateData.style.color = "red";
+        dateData.style.color = "#f97316";
         dateData.innerHTML = "Pas de données pour cette date";
     } else {
         const d = snap.val();
-        dateData.style.color = "#222";
+        dateData.style.color = "#e5e7eb";
         dateData.innerHTML = `
             <strong>Extérieur :</strong> ${d.exterieur.temperature ?? "--"} °C / ${d.exterieur.humidite ?? "--"}%<br>
             <strong>Intérieur :</strong> ${d.interieur.temperature ?? "--"} °C / ${d.interieur.humidite ?? "--"}%
@@ -322,7 +450,10 @@ window.logout = function () {
     signOut(auth).then(() => {
         loginDiv.style.display = "block";
         signupDiv.style.display = "block";
+        personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
+        adminLoginDiv.style.display = "block";
+        adminPanel.style.display = "none";
     });
 };
 
@@ -347,8 +478,12 @@ window.adminLogin = async function () {
 
         adminLoginDiv.style.display = "none";
         adminPanel.style.display = "block";
-        loadUsersList();
+        loginDiv.style.display = "none";
+        signupDiv.style.display = "none";
+        personalInfoDiv.style.display = "none";
+        appDiv.style.display = "none";
 
+        loadUsersList();
     } catch (err) {
         alert("Erreur connexion admin : " + err.message);
     }
@@ -389,6 +524,9 @@ window.logoutAdmin = function () {
     signOut(auth).then(() => {
         adminLoginDiv.style.display = "block";
         adminPanel.style.display = "none";
+        loginDiv.style.display = "block";
+        signupDiv.style.display = "block";
+        appDiv.style.display = "none";
     });
 };
 
@@ -403,14 +541,24 @@ onAuthStateChanged(auth, async (user) => {
         if (data?.role === "admin") {
             adminPanel.style.display = "block";
             appDiv.style.display = "none";
+            loginDiv.style.display = "none";
+            signupDiv.style.display = "none";
+            personalInfoDiv.style.display = "none";
             loadUsersList();
         } else {
             adminPanel.style.display = "none";
+            loginDiv.style.display = "none";
+            signupDiv.style.display = "none";
+            personalInfoDiv.style.display = "none";
             appDiv.style.display = "block";
             initStation(user);
         }
     } else {
         adminLoginDiv.style.display = "block";
+        adminPanel.style.display = "none";
+        loginDiv.style.display = "block";
+        signupDiv.style.display = "block";
+        personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
     }
 });
