@@ -7,7 +7,7 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Firebase v8 (comme ton ancien code qui marchait) -->
+<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -24,26 +24,13 @@
     --muted: #9ca3af;
 }
 
-* { box-sizing: border-box; }
-
 body {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: system-ui, sans-serif;
     background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
     color: var(--text);
     text-align: center;
 }
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-h1 { margin: 0; }
 
 .card {
     background: var(--card-bg);
@@ -62,7 +49,6 @@ input, button {
     padding: 10px;
     margin: 5px;
     border-radius: 10px;
-    font-size: 15px;
     width: 80%;
 }
 
@@ -73,9 +59,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
-    background: var(--primary-dark);
-}
+button:hover { background: var(--primary-dark); }
 
 #logoutBtn, #logoutAdminBtn {
     background: var(--danger);
@@ -85,59 +69,37 @@ button:hover {
 .choice-btn {
     width: 80%;
     max-width: 320px;
-    display: block;
     margin: 10px auto;
     padding: 12px;
     border-radius: 999px;
     font-size: 16px;
     display: flex;
-    align-items: center;
     justify-content: center;
     gap: 8px;
 }
 
-.choice-btn span.icon { font-size: 20px; }
-
-#app, #adminPanel,
-#loginUserDiv, #loginAdminDiv,
-#signupDiv, #personalInfoDiv {
+#app, #adminPanel, #loginUserDiv, #loginAdminDiv, #signupDiv, #personalInfoDiv {
     display: none;
-}
-
-canvas {
-    width: 100% !important;
-    height: 220px !important;
-    margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
-<header>
-    <h1>🌤 Station Météo</h1>
-</header>
 
-<!-- Accueil : choix -->
+<h1>🌤 Station Météo</h1>
+
+<!-- Accueil -->
 <div id="homeChoice" class="card">
     <h3>Bienvenue</h3>
-    <p style="color:var(--muted); font-size:14px;">
-        Choisissez votre type de connexion.
-    </p>
-    <button class="choice-btn" id="btnGoUser">
-        <span class="icon">👤</span>
-        <span>Connexion utilisateur</span>
-    </button>
-    <button class="choice-btn" id="btnGoAdmin">
-        <span class="icon">🛡️</span>
-        <span>Connexion administrateur</span>
-    </button>
+    <button class="choice-btn" id="btnGoUser">👤 Connexion utilisateur</button>
+    <button class="choice-btn" id="btnGoAdmin">🛡️ Connexion administrateur</button>
 </div>
 
-<!-- Connexion Utilisateur -->
+<!-- Connexion utilisateur -->
 <div id="loginUserDiv" class="card">
-    <h3>Connexion Utilisateur</h3>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Mot de passe"><br>
+    <h3>Connexion utilisateur</h3>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Mot de passe">
     <button onclick="login()">Se connecter</button>
     <button onclick="showSignup()">Créer un compte</button>
     <button onclick="backToHome()">⬅ Retour</button>
@@ -146,8 +108,8 @@ canvas {
 <!-- Inscription -->
 <div id="signupDiv" class="card">
     <h3>Créer un compte</h3>
-    <input type="email" id="signupEmail" placeholder="Email"><br>
-    <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
+    <input id="signupEmail" type="email" placeholder="Email">
+    <input id="signupPassword" type="password" placeholder="Mot de passe">
     <button onclick="signup()">S'inscrire</button>
     <button onclick="backToLoginUser()">⬅ Retour</button>
 </div>
@@ -155,55 +117,43 @@ canvas {
 <!-- Infos perso -->
 <div id="personalInfoDiv" class="card">
     <h3>Informations personnelles</h3>
-    <input type="text" id="firstName" placeholder="Prénom"><br>
-    <input type="text" id="lastName" placeholder="Nom"><br>
-    <input type="number" id="age" placeholder="Âge"><br>
+    <input id="firstName" type="text" placeholder="Prénom">
+    <input id="lastName" type="text" placeholder="Nom">
+    <input id="age" type="number" placeholder="Âge">
     <button onclick="savePersonalInfo()">Valider</button>
 </div>
 
-<!-- Connexion Admin -->
+<!-- Connexion admin -->
 <div id="loginAdminDiv" class="card">
-    <h3>Connexion Administrateur</h3>
-    <input type="email" id="adminEmail" placeholder="Email Admin"><br>
-    <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
-    <button onclick="adminLogin()">Se connecter Admin</button>
+    <h3>Connexion administrateur</h3>
+    <input id="adminEmail" type="email" placeholder="Email admin">
+    <input id="adminPassword" type="password" placeholder="Mot de passe">
+    <button onclick="adminLogin()">Connexion admin</button>
     <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
-<!-- Interface Utilisateur -->
+<!-- Interface utilisateur -->
 <div id="app">
     <div class="card">
         <h2>Vue en temps réel</h2>
-        <div>Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span> %</div>
-        <div>Intérieur : <span id="tempInt">--</span> °C / <span id="humInt">--</span> %</div>
-        <div><button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button></div>
-    </div>
-
-    <div class="card">
-        <h3>Graphiques Température</h3>
-        <canvas id="chartTempInt"></canvas>
-        <canvas id="chartTempExt"></canvas>
-    </div>
-
-    <div class="card">
-        <h3>Historique par date</h3>
-        <input type="date" id="datePicker">
-        <button onclick="loadDateData()">Voir données</button>
-        <div id="dateData"></div>
+        <div>Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span>%</div>
+        <div>Intérieur : <span id="tempInt">--</span> °C / <span id="humInt">--</span>%</div>
+        <button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button>
     </div>
 
     <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
-<!-- Panel Admin -->
+<!-- Panel admin -->
 <div id="adminPanel" class="card">
     <h3>Panel Administrateur</h3>
+    <h4 id="userCount"></h4>
     <div id="usersList"></div>
-    <button id="logoutAdminBtn" onclick="logout()">Déconnexion Admin</button>
+    <button id="logoutAdminBtn" onclick="logout()">Déconnexion admin</button>
 </div>
 
 <script>
-// ---------------------- Firebase v8 ----------------------
+// ---------------- Firebase v8 ----------------
 var firebaseConfig = {
     apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
     authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -216,33 +166,17 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 var auth = firebase.auth();
-var db   = firebase.database();
+var db = firebase.database();
 
-// ---------------------- DOM ----------------------
-var homeChoice     = document.getElementById("homeChoice");
-var loginUserDiv   = document.getElementById("loginUserDiv");
-var loginAdminDiv  = document.getElementById("loginAdminDiv");
-var signupDiv      = document.getElementById("signupDiv");
-var personalInfoDiv= document.getElementById("personalInfoDiv");
-var appDiv         = document.getElementById("app");
-var adminPanel     = document.getElementById("adminPanel");
-
-var tempExt = document.getElementById("tempExt");
-var humExt  = document.getElementById("humExt");
-var tempInt = document.getElementById("tempInt");
-var humInt  = document.getElementById("humInt");
-var dateData= document.getElementById("dateData");
-var btnLampe= document.getElementById("btnLampe");
-
-// ---------------------- Navigation ----------------------
-document.getElementById("btnGoUser").addEventListener("click", function() {
+// ---------------- Navigation ----------------
+document.getElementById("btnGoUser").onclick = () => {
     homeChoice.style.display = "none";
     loginUserDiv.style.display = "block";
-});
-document.getElementById("btnGoAdmin").addEventListener("click", function() {
+};
+document.getElementById("btnGoAdmin").onclick = () => {
     homeChoice.style.display = "none";
     loginAdminDiv.style.display = "block";
-});
+};
 
 function backToHome() {
     homeChoice.style.display = "block";
@@ -261,176 +195,54 @@ function backToLoginUser() {
     signupDiv.style.display = "none";
     loginUserDiv.style.display = "block";
 }
-window.backToHome = backToHome;
-window.showSignup = showSignup;
-window.backToLoginUser = backToLoginUser;
 
-// ---------------------- Graphiques ----------------------
-var chartInt = new Chart(document.getElementById("chartTempInt"), {
-    type: "line",
-    data: { labels: [], datasets: [{ label: "Température intérieure (°C)", data: [], borderColor: "#f97316" }] }
-});
-var chartExt = new Chart(document.getElementById("chartTempExt"), {
-    type: "line",
-    data: { labels: [], datasets: [{ label: "Température extérieure (°C)", data: [], borderColor: "#38bdf8" }] }
-});
-
-// ---------------------- Inscription ----------------------
+// ---------------- Inscription ----------------
 function signup() {
-    var email = document.getElementById("signupEmail").value;
-    var password = document.getElementById("signupPassword").value;
-    if (!email || !password) { alert("Email et mot de passe requis"); return; }
+    var email = signupEmail.value;
+    var password = signupPassword.value;
 
     auth.createUserWithEmailAndPassword(email, password)
-        .then(function() {
+        .then(() => {
             signupDiv.style.display = "none";
             personalInfoDiv.style.display = "block";
         })
-        .catch(function(err) {
-            alert("Erreur inscription : " + err.message);
-        });
+        .catch(err => alert(err.message));
 }
-window.signup = signup;
 
+// ---------------- Sauvegarde infos perso ----------------
 function savePersonalInfo() {
     var user = auth.currentUser;
-    if (!user) { alert("Utilisateur non connecté"); return; }
-
-    var firstName = document.getElementById("firstName").value;
-    var lastName  = document.getElementById("lastName").value;
-    var age       = document.getElementById("age").value;
+    if (!user) return;
 
     db.ref("users/" + user.uid).set({
         role: "user",
-        firstName: firstName,
-        lastName: lastName,
-        age: age,
+        firstName: firstName.value,
+        lastName: lastName.value,
+        age: age.value,
         email: user.email
-    }).then(function() {
-        personalInfoDiv.style.display = "none";
-        appDiv.style.display = "block";
-        initStation();
     });
+
+    personalInfoDiv.style.display = "none";
+    appDiv.style.display = "block";
 }
-window.savePersonalInfo = savePersonalInfo;
 
-// ---------------------- Connexion utilisateur ----------------------
+// ---------------- Connexion user ----------------
 function login() {
-    var email = document.getElementById("email").value;
-    var password = document.getElementById("password").value;
-    if (!email || !password) { alert("Email et mot de passe requis"); return; }
-
-    auth.signInWithEmailAndPassword(email, password)
-        .then(function() {
+    auth.signInWithEmailAndPassword(email.value, password.value)
+        .then(() => {
             loginUserDiv.style.display = "none";
             appDiv.style.display = "block";
-            initStation();
         })
-        .catch(function(err) {
-            alert("Erreur connexion : " + err.message);
-        });
-}
-window.login = login;
-
-// ---------------------- Station météo ----------------------
-function initStation() {
-    var stationRef = db.ref("station");
-    stationRef.on("value", function(snap) {
-        var data = snap.val() || {};
-
-        if (data.exterieur) {
-            tempExt.innerText = data.exterieur.temperature != null ? data.exterieur.temperature : "--";
-            humExt.innerText  = data.exterieur.humidite  != null ? data.exterieur.humidite  : "--";
-        } else {
-            tempExt.innerText = "--";
-            humExt.innerText  = "--";
-        }
-
-        if (data.interieur) {
-            tempInt.innerText = data.interieur.temperature != null ? data.interieur.temperature : "--";
-            humInt.innerText  = data.interieur.humidite  != null ? data.interieur.humidite  : "--";
-        } else {
-            tempInt.innerText = "--";
-            humInt.innerText  = "--";
-        }
-
-        var timeLabel = new Date().toLocaleTimeString();
-        if (data.interieur && data.interieur.temperature != null) {
-            chartInt.data.labels.push(timeLabel);
-            chartInt.data.datasets[0].data.push(data.interieur.temperature);
-            if (chartInt.data.labels.length > 20) {
-                chartInt.data.labels.shift();
-                chartInt.data.datasets[0].data.shift();
-            }
-            chartInt.update();
-        }
-        if (data.exterieur && data.exterieur.temperature != null) {
-            chartExt.data.labels.push(timeLabel);
-            chartExt.data.datasets[0].data.push(data.exterieur.temperature);
-            if (chartExt.data.labels.length > 20) {
-                chartExt.data.labels.shift();
-                chartExt.data.datasets[0].data.shift();
-            }
-            chartExt.update();
-        }
-    });
+        .catch(err => alert(err.message));
 }
 
-// ---------------------- Lampe ----------------------
-function toggleLampe() {
-    var lampeRef = db.ref("station/lampe");
-    lampeRef.once("value").then(function(snap) {
-        var current = snap.val();
-        var newEtat = !current;
-        lampeRef.set(newEtat);
-        btnLampe.innerText = newEtat ? "Lampe : ON" : "Lampe : OFF";
-    });
-}
-window.toggleLampe = toggleLampe;
-
-// ---------------------- Historique ----------------------
-function loadDateData() {
-    var date = document.getElementById("datePicker").value;
-    if (!date) { dateData.innerHTML = "Choisissez une date"; return; }
-
-    db.ref("historique/" + date).once("value").then(function(snap) {
-        if (!snap.exists()) {
-            dateData.innerHTML = "Pas de données";
-        } else {
-            var d = snap.val();
-            var extT = d.exterieur && d.exterieur.temperature != null ? d.exterieur.temperature : "--";
-            var extH = d.exterieur && d.exterieur.humidite  != null ? d.exterieur.humidite  : "--";
-            var intT = d.interieur && d.interieur.temperature != null ? d.interieur.temperature : "--";
-            var intH = d.interieur && d.interieur.humidite  != null ? d.interieur.humidite  : "--";
-            dateData.innerHTML =
-                "Extérieur : " + extT + " °C / " + extH + "%<br>" +
-                "Intérieur : " + intT + " °C / " + intH + "%";
-        }
-    });
-}
-window.loadDateData = loadDateData;
-
-// ---------------------- Déconnexion ----------------------
-function logout() {
-    auth.signOut().then(function() {
-        backToHome();
-    });
-}
-window.logout = logout;
-
-// ---------------------- Admin ----------------------
+// ---------------- Connexion admin ----------------
 function adminLogin() {
-    var email = document.getElementById("adminEmail").value;
-    var password = document.getElementById("adminPassword").value;
-    if (!email || !password) { alert("Email et mot de passe requis"); return; }
-
-    auth.signInWithEmailAndPassword(email, password)
-        .then(function(cred) {
-            var uid = cred.user.uid;
-            db.ref("users/" + uid).once("value").then(function(snap) {
-                var data = snap.val();
-                if (!data || data.role !== "admin") {
-                    alert("Vous n'êtes pas administrateur");
+    auth.signInWithEmailAndPassword(adminEmail.value, adminPassword.value)
+        .then(cred => {
+            db.ref("users/" + cred.user.uid).once("value").then(snap => {
+                if (!snap.exists() || snap.val().role !== "admin") {
+                    alert("Pas admin");
                     auth.signOut();
                     return;
                 }
@@ -439,58 +251,81 @@ function adminLogin() {
                 loadUsersList();
             });
         })
-        .catch(function(err) {
-            alert("Erreur admin : " + err.message);
-        });
+        .catch(err => alert(err.message));
 }
-window.adminLogin = adminLogin;
 
+// ---------------- Panel admin ----------------
 function loadUsersList() {
     var usersDiv = document.getElementById("usersList");
+    var userCountDiv = document.getElementById("userCount");
+
     usersDiv.innerHTML = "";
-    db.ref("users").once("value").then(function(snap) {
+
+    db.ref("users").once("value").then(snap => {
         if (!snap.exists()) {
             usersDiv.innerHTML = "Aucun utilisateur";
+            userCountDiv.innerHTML = "0 utilisateur";
             return;
         }
+
         var users = snap.val();
+        var count = 0;
+
         for (var uid in users) {
+            count++;
             var u = users[uid];
+
             var div = document.createElement("div");
-            div.style.margin = "5px 0";
-            div.textContent = (u.firstName || "") + " " + (u.lastName || "") +
-                              " (" + (u.email || "") + ") [" + (u.role || "user") + "]";
+            div.style.margin = "10px 0";
+            div.style.padding = "10px";
+            div.style.border = "1px solid #1f2937";
+            div.style.borderRadius = "10px";
+
+            div.innerHTML = `
+                <strong>${u.firstName || ""} ${u.lastName || ""}</strong><br>
+                Email : ${u.email}<br>
+                Âge : ${u.age || "?"}<br>
+                Rôle : ${u.role}<br><br>
+                <button onclick="deleteUser('${uid}')" 
+                        style="background:#ef4444;border-color:#b91c1c;">
+                    Supprimer
+                </button>
+            `;
+
             usersDiv.appendChild(div);
         }
+
+        userCountDiv.innerHTML = count + " utilisateur(s)";
     });
 }
 
-// ---------------------- Auth state ----------------------
-auth.onAuthStateChanged(function(user) {
-    if (!user) {
-        backToHome();
-        return;
-    }
-    db.ref("users/" + user.uid).once("value").then(function(snap) {
-        var data = snap.val();
-        if (data && data.role === "admin") {
+function deleteUser(uid) {
+    if (!confirm("Supprimer cet utilisateur ?")) return;
+
+    db.ref("users/" + uid).remove()
+        .then(() => {
+            alert("Utilisateur supprimé");
+            loadUsersList();
+        });
+}
+
+// ---------------- Déconnexion ----------------
+function logout() {
+    auth.signOut().then(backToHome);
+}
+
+// ---------------- Auth state ----------------
+auth.onAuthStateChanged(user => {
+    if (!user) return backToHome();
+
+    db.ref("users/" + user.uid).once("value").then(snap => {
+        if (snap.exists() && snap.val().role === "admin") {
             homeChoice.style.display = "none";
-            loginUserDiv.style.display = "none";
-            loginAdminDiv.style.display = "none";
-            signupDiv.style.display = "none";
-            personalInfoDiv.style.display = "none";
-            appDiv.style.display = "none";
             adminPanel.style.display = "block";
             loadUsersList();
         } else {
             homeChoice.style.display = "none";
-            loginUserDiv.style.display = "none";
-            loginAdminDiv.style.display = "none";
-            signupDiv.style.display = "none";
-            personalInfoDiv.style.display = "none";
-            adminPanel.style.display = "none";
             appDiv.style.display = "block";
-            initStation();
         }
     });
 });
