@@ -9,10 +9,10 @@
 
 <style>
 :root {
-    --primary: #00aaff;
-    --primary-dark: #0077cc;
+    --primary: #0ea5e9;
+    --primary-dark: #0369a1;
     --bg: #0b1220;
-    --card-bg: #111827;
+    --card-bg: #020617;
     --text: #e5e7eb;
     --accent: #22c55e;
     --danger: #ef4444;
@@ -128,8 +128,9 @@ button:hover {
     cursor: pointer;
 }
 
-#app, #personalInfoDiv, #logoutBtn, #adminPanel { display: none; }
-#loginDiv, #signupDiv, #adminLoginDiv { margin-top: 30px; }
+#app, #personalInfoDiv, #logoutBtn, #adminPanel,
+#loginUserDiv, #loginAdminDiv, #signupDiv { display: none; }
+
 #calendarDiv { margin-top: 20px; }
 #btnLampe { min-width: 160px; font-weight: bold; }
 #dateData { margin-top:10px; font-weight:bold; color: var(--text); }
@@ -173,6 +174,29 @@ canvas {
     height: 220px !important;
     margin-top: 10px;
 }
+
+/* Page d’accueil choix utilisateur/admin */
+#homeChoice {
+    margin-top: 30px;
+}
+
+.choice-btn {
+    width: 80%;
+    max-width: 320px;
+    display: block;
+    margin: 10px auto;
+    padding: 12px;
+    border-radius: 999px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.choice-btn span.icon {
+    font-size: 20px;
+}
 </style>
 </head>
 
@@ -182,20 +206,39 @@ canvas {
     <button id="themeToggleBtn" type="button">🌙 Mode sombre</button>
 </header>
 
+<!-- Page d’accueil : choix du type de connexion -->
+<div id="homeChoice" class="card">
+    <h3>Bienvenue</h3>
+    <p style="color:var(--muted); font-size:14px;">
+        Choisissez votre type de connexion pour accéder à la station météo.
+    </p>
+    <button class="choice-btn" id="btnGoUser">
+        <span class="icon">👤</span>
+        <span>Connexion utilisateur</span>
+    </button>
+    <button class="choice-btn" id="btnGoAdmin">
+        <span class="icon">🛡️</span>
+        <span>Connexion administrateur</span>
+    </button>
+</div>
+
 <!-- Connexion Utilisateur -->
-<div id="loginDiv" class="card">
+<div id="loginUserDiv" class="card">
     <h3>Connexion Utilisateur</h3>
     <input type="email" id="email" placeholder="Email"><br>
     <input type="password" id="password" placeholder="Mot de passe"><br>
     <button onclick="login()">Se connecter</button>
+    <button onclick="showSignup()">Créer un compte</button>
+    <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
-<!-- Inscription -->
+<!-- Inscription Utilisateur -->
 <div id="signupDiv" class="card">
     <h3>Créer un compte</h3>
     <input type="email" id="signupEmail" placeholder="Email"><br>
     <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
     <button onclick="signup()">S'inscrire</button>
+    <button onclick="backToLoginUser()">⬅ Retour</button>
 </div>
 
 <!-- Infos personnelles -->
@@ -205,6 +248,15 @@ canvas {
     <input type="text" id="lastName" placeholder="Nom"><br>
     <input type="number" id="age" placeholder="Âge"><br>
     <button onclick="savePersonalInfo()">Valider</button>
+</div>
+
+<!-- Connexion Admin -->
+<div id="loginAdminDiv" class="card">
+    <h3>Connexion Administrateur</h3>
+    <input type="email" id="adminEmail" placeholder="Email Admin"><br>
+    <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
+    <button onclick="adminLogin()">Se connecter Admin</button>
+    <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
 <!-- Interface Utilisateur -->
@@ -255,14 +307,6 @@ canvas {
     <button id="logoutBtn" onclick="logout()">Déconnexion</button>
 </div>
 
-<!-- Connexion Admin -->
-<div id="adminLoginDiv" class="card">
-    <h3>Connexion Administrateur</h3>
-    <input type="email" id="adminEmail" placeholder="Email Admin"><br>
-    <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
-    <button onclick="adminLogin()">Se connecter Admin</button>
-</div>
-
 <!-- Panel Admin -->
 <div id="adminPanel" class="card">
     <h3>Panel Administrateur</h3>
@@ -291,18 +335,23 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 /* ---------------------- DOM ---------------------- */
-const loginDiv = document.getElementById("loginDiv");
+const homeChoice = document.getElementById("homeChoice");
+const btnGoUser = document.getElementById("btnGoUser");
+const btnGoAdmin = document.getElementById("btnGoAdmin");
+
+const loginUserDiv = document.getElementById("loginUserDiv");
+const loginAdminDiv = document.getElementById("loginAdminDiv");
 const signupDiv = document.getElementById("signupDiv");
 const personalInfoDiv = document.getElementById("personalInfoDiv");
 const appDiv = document.getElementById("app");
+const adminPanel = document.getElementById("adminPanel");
+
 const tempExt = document.getElementById("tempExt");
 const humExt = document.getElementById("humExt");
 const tempInt = document.getElementById("tempInt");
 const humInt = document.getElementById("humInt");
 const dateData = document.getElementById("dateData");
 const btnLampe = document.getElementById("btnLampe");
-const adminLoginDiv = document.getElementById("adminLoginDiv");
-const adminPanel = document.getElementById("adminPanel");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 
 /* ---------------------- Thème clair / sombre ---------------------- */
@@ -326,6 +375,41 @@ themeToggleBtn.addEventListener("click", () => {
     const current = document.body.classList.contains("light-mode") ? "light" : "dark";
     applyTheme(current === "light" ? "dark" : "light");
 });
+
+/* ---------------------- Navigation locale ---------------------- */
+btnGoUser.addEventListener("click", () => {
+    homeChoice.style.display = "none";
+    loginUserDiv.style.display = "block";
+    loginAdminDiv.style.display = "none";
+    signupDiv.style.display = "none";
+});
+
+btnGoAdmin.addEventListener("click", () => {
+    homeChoice.style.display = "none";
+    loginUserDiv.style.display = "none";
+    loginAdminDiv.style.display = "block";
+    signupDiv.style.display = "none";
+});
+
+window.backToHome = function () {
+    homeChoice.style.display = "block";
+    loginUserDiv.style.display = "none";
+    loginAdminDiv.style.display = "none";
+    signupDiv.style.display = "none";
+    personalInfoDiv.style.display = "none";
+    appDiv.style.display = "none";
+    adminPanel.style.display = "none";
+};
+
+window.showSignup = function () {
+    loginUserDiv.style.display = "none";
+    signupDiv.style.display = "block";
+};
+
+window.backToLoginUser = function () {
+    signupDiv.style.display = "none";
+    loginUserDiv.style.display = "block";
+};
 
 /* ---------------------- Graphiques ---------------------- */
 let chartInt = new Chart(document.getElementById("chartTempInt"), {
@@ -410,7 +494,7 @@ window.savePersonalInfo = async function () {
     initStation(user);
 };
 
-/* ---------------------- Connexion ---------------------- */
+/* ---------------------- Connexion utilisateur ---------------------- */
 window.login = function () {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -419,7 +503,7 @@ window.login = function () {
 
     signInWithEmailAndPassword(auth, email, password)
         .then(userCred => {
-            loginDiv.style.display = "none";
+            loginUserDiv.style.display = "none";
             signupDiv.style.display = "none";
             personalInfoDiv.style.display = "none";
             appDiv.style.display = "block";
@@ -519,11 +603,12 @@ window.loadDateData = async function () {
 /* ---------------------- Déconnexion ---------------------- */
 window.logout = function () {
     signOut(auth).then(() => {
-        loginDiv.style.display = "block";
-        signupDiv.style.display = "block";
+        homeChoice.style.display = "block";
+        loginUserDiv.style.display = "none";
+        loginAdminDiv.style.display = "none";
+        signupDiv.style.display = "none";
         personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
-        adminLoginDiv.style.display = "block";
         adminPanel.style.display = "none";
     });
 };
@@ -547,9 +632,10 @@ window.adminLogin = async function () {
             return;
         }
 
-        adminLoginDiv.style.display = "none";
+        loginAdminDiv.style.display = "none";
         adminPanel.style.display = "block";
-        loginDiv.style.display = "none";
+        homeChoice.style.display = "none";
+        loginUserDiv.style.display = "none";
         signupDiv.style.display = "none";
         personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
@@ -593,10 +679,12 @@ window.deleteUser = async function (uid) {
 
 window.logoutAdmin = function () {
     signOut(auth).then(() => {
-        adminLoginDiv.style.display = "block";
+        homeChoice.style.display = "block";
         adminPanel.style.display = "none";
-        loginDiv.style.display = "block";
-        signupDiv.style.display = "block";
+        loginAdminDiv.style.display = "none";
+        loginUserDiv.style.display = "none";
+        signupDiv.style.display = "none";
+        personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
     });
 };
@@ -607,30 +695,34 @@ onAuthStateChanged(auth, async (user) => {
         const snap = await get(ref(db, "users/" + user.uid));
         const data = snap.val();
 
-        adminLoginDiv.style.display = "none";
-
         if (data?.role === "admin") {
-            adminPanel.style.display = "block";
-            appDiv.style.display = "none";
-            loginDiv.style.display = "none";
+            homeChoice.style.display = "none";
+            loginUserDiv.style.display = "none";
+            loginAdminDiv.style.display = "none";
             signupDiv.style.display = "none";
             personalInfoDiv.style.display = "none";
+            appDiv.style.display = "none";
+            adminPanel.style.display = "block";
             loadUsersList();
         } else {
-            adminPanel.style.display = "none";
-            loginDiv.style.display = "none";
+            homeChoice.style.display = "none";
+            loginUserDiv.style.display = "none";
+            loginAdminDiv.style.display = "none";
             signupDiv.style.display = "none";
             personalInfoDiv.style.display = "none";
+            adminPanel.style.display = "none";
             appDiv.style.display = "block";
             initStation(user);
         }
     } else {
-        adminLoginDiv.style.display = "block";
-        adminPanel.style.display = "none";
-        loginDiv.style.display = "block";
-        signupDiv.style.display = "block";
+        // Personne connecté → retour à la page d’accueil
+        homeChoice.style.display = "block";
+        loginUserDiv.style.display = "none";
+        loginAdminDiv.style.display = "none";
+        signupDiv.style.display = "none";
         personalInfoDiv.style.display = "none";
         appDiv.style.display = "none";
+        adminPanel.style.display = "none";
     }
 });
 </script>
