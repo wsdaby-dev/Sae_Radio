@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Station Météo</title>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -14,42 +13,17 @@
     --bg: #0b1220;
     --card-bg: #020617;
     --text: #e5e7eb;
-    --accent: #22c55e;
     --danger: #ef4444;
     --border: #1f2937;
     --muted: #9ca3af;
 }
 
-/* MODE CLAIR */
-body.light-mode {
-    --bg: #f3f4f6;
-    --card-bg: #ffffff;
-    --text: #111827;
-    --border: #d1d5db;
-    --muted: #6b7280;
-}
-
-/* MODE SOMBRE */
-body.dark-mode {
-    --bg: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
-    --card-bg: #020617;
-    --text: #e5e7eb;
-    --border: #1f2937;
-    --muted: #9ca3af;
-}
-
-* {
-    box-sizing: border-box;
-}
-
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    text-align: center;
     margin: 0;
-    padding: 0;
-    transition: background 0.3s ease, color 0.3s ease;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #1d4ed8 0, #020617 45%, #000 100%);
+    color: var(--text);
+    text-align: center;
 }
 
 header {
@@ -63,21 +37,6 @@ header {
 
 h1 {
     margin: 0;
-    color: var(--text);
-    letter-spacing: 1px;
-}
-
-#themeToggleBtn {
-    background: transparent;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    padding: 6px 14px;
-    font-size: 14px;
-    color: var(--text);
-}
-
-#themeToggleBtn:hover {
-    background: rgba(148,163,184,0.15);
 }
 
 .card {
@@ -105,24 +64,16 @@ button {
     background: var(--primary);
     border-color: var(--primary-dark);
     font-weight: 600;
+    cursor: pointer;
 }
 
 button:hover {
     background: var(--primary-dark);
 }
 
-#logoutBtn {
+#logoutBtn, #logoutAdminBtn {
     background: var(--danger);
     border-color: #b91c1c;
-}
-
-#logoutBtn:hover {
-    background: #b91c1c;
-}
-
-/* Page d’accueil choix utilisateur/admin */
-#homeChoice {
-    margin-top: 30px;
 }
 
 .choice-btn {
@@ -143,8 +94,11 @@ button:hover {
     font-size: 20px;
 }
 
-#app, #personalInfoDiv, #logoutBtn, #adminPanel,
-#loginUserDiv, #loginAdminDiv, #signupDiv { display: none; }
+#app, #adminPanel,
+#loginUserDiv, #loginAdminDiv,
+#signupDiv, #personalInfoDiv {
+    display: none;
+}
 
 canvas {
     width: 100% !important;
@@ -154,13 +108,12 @@ canvas {
 </style>
 </head>
 
-<body class="dark-mode">
+<body>
 <header>
     <h1>🌤 Station Météo</h1>
-    <button id="themeToggleBtn" type="button">🌙 Mode sombre</button>
 </header>
 
-<!-- Page d’accueil : choix du type de connexion -->
+<!-- Accueil : choix -->
 <div id="homeChoice" class="card">
     <h3>Bienvenue</h3>
     <p style="color:var(--muted); font-size:14px;">
@@ -186,7 +139,7 @@ canvas {
     <button onclick="backToHome()">⬅ Retour</button>
 </div>
 
-<!-- Inscription Utilisateur -->
+<!-- Inscription -->
 <div id="signupDiv" class="card">
     <h3>Créer un compte</h3>
     <input type="email" id="signupEmail" placeholder="Email"><br>
@@ -195,7 +148,7 @@ canvas {
     <button onclick="backToLoginUser()">⬅ Retour</button>
 </div>
 
-<!-- Infos personnelles -->
+<!-- Infos perso -->
 <div id="personalInfoDiv" class="card">
     <h3>Informations personnelles</h3>
     <input type="text" id="firstName" placeholder="Prénom"><br>
@@ -215,29 +168,19 @@ canvas {
 
 <!-- Interface Utilisateur -->
 <div id="app">
-
-    <!-- Carte météo -->
     <div class="card">
         <h2>Vue en temps réel</h2>
-        <div>
-            Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span> %
-        </div>
-        <div>
-            Intérieur : <span id="tempInt">--</span> °C / <span id="humInt">--</span> %
-        </div>
-        <div>
-            <button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button>
-        </div>
+        <div>Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span> %</div>
+        <div>Intérieur : <span id="tempInt">--</span> °C / <span id="humInt">--</span> %</div>
+        <div><button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button></div>
     </div>
 
-    <!-- Graphiques -->
     <div class="card">
         <h3>Graphiques Température</h3>
         <canvas id="chartTempInt"></canvas>
         <canvas id="chartTempExt"></canvas>
     </div>
 
-    <!-- Historique -->
     <div class="card">
         <h3>Historique par date</h3>
         <input type="date" id="datePicker">
@@ -252,28 +195,24 @@ canvas {
 <div id="adminPanel" class="card">
     <h3>Panel Administrateur</h3>
     <div id="usersList"></div>
-    <button onclick="logoutAdmin()">Déconnexion Admin</button>
+    <button id="logoutAdminBtn" onclick="logout()">Déconnexion Admin</button>
 </div>
 
 <script type="module">
-/* ---------------------- Firebase ---------------------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    onAuthStateChanged, 
-    signOut,
-    setPersistence,
-    browserSessionPersistence
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import { 
-    getDatabase, 
-    ref, 
-    onValue, 
-    set, 
-    get 
+import {
+    getDatabase,
+    ref,
+    onValue,
+    set,
+    get
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -290,14 +229,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* 🔥 Empêche la reconnexion automatique */
-setPersistence(auth, browserSessionPersistence);
-
-/* ---------------------- DOM ---------------------- */
+// DOM
 const homeChoice = document.getElementById("homeChoice");
-const btnGoUser = document.getElementById("btnGoUser");
-const btnGoAdmin = document.getElementById("btnGoAdmin");
-
 const loginUserDiv = document.getElementById("loginUserDiv");
 const loginAdminDiv = document.getElementById("loginAdminDiv");
 const signupDiv = document.getElementById("signupDiv");
@@ -311,36 +244,13 @@ const tempInt = document.getElementById("tempInt");
 const humInt = document.getElementById("humInt");
 const dateData = document.getElementById("dateData");
 const btnLampe = document.getElementById("btnLampe");
-const themeToggleBtn = document.getElementById("themeToggleBtn");
 
-/* ---------------------- Thème clair / sombre ---------------------- */
-function applyTheme(theme) {
-    if (theme === "light") {
-        document.body.classList.remove("dark-mode");
-        document.body.classList.add("light-mode");
-        themeToggleBtn.textContent = "☀️ Mode clair";
-    } else {
-        document.body.classList.remove("light-mode");
-        document.body.classList.add("dark-mode");
-        themeToggleBtn.textContent = "🌙 Mode sombre";
-    }
-    localStorage.setItem("theme", theme);
-}
-
-applyTheme(localStorage.getItem("theme") || "dark");
-
-themeToggleBtn.addEventListener("click", () => {
-    const current = document.body.classList.contains("light-mode") ? "light" : "dark";
-    applyTheme(current === "light" ? "dark" : "light");
-});
-
-/* ---------------------- Navigation locale ---------------------- */
-btnGoUser.addEventListener("click", () => {
+// Navigation locale
+document.getElementById("btnGoUser").addEventListener("click", () => {
     homeChoice.style.display = "none";
     loginUserDiv.style.display = "block";
 });
-
-btnGoAdmin.addEventListener("click", () => {
+document.getElementById("btnGoAdmin").addEventListener("click", () => {
     homeChoice.style.display = "none";
     loginAdminDiv.style.display = "block";
 });
@@ -365,21 +275,21 @@ window.backToLoginUser = function () {
     loginUserDiv.style.display = "block";
 };
 
-/* ---------------------- Graphiques ---------------------- */
+// Graphiques
 let chartInt = new Chart(document.getElementById("chartTempInt"), {
     type: "line",
     data: { labels: [], datasets: [{ label: "Température intérieure (°C)", data: [], borderColor: "#f97316" }] }
 });
-
 let chartExt = new Chart(document.getElementById("chartTempExt"), {
     type: "line",
     data: { labels: [], datasets: [{ label: "Température extérieure (°C)", data: [], borderColor: "#38bdf8" }] }
 });
 
-/* ---------------------- Inscription ---------------------- */
+// Inscription
 window.signup = async function () {
     const email = document.getElementById("signupEmail").value;
     const password = document.getElementById("signupPassword").value;
+    if (!email || !password) return alert("Email et mot de passe requis");
 
     try {
         await createUserWithEmailAndPassword(auth, email, password);
@@ -392,6 +302,7 @@ window.signup = async function () {
 
 window.savePersonalInfo = async function () {
     const user = auth.currentUser;
+    if (!user) return alert("Utilisateur non connecté");
 
     await set(ref(db, "users/" + user.uid), {
         role: "user",
@@ -403,55 +314,70 @@ window.savePersonalInfo = async function () {
 
     personalInfoDiv.style.display = "none";
     appDiv.style.display = "block";
-    initStation(user);
+    initStation();
 };
 
-/* ---------------------- Connexion utilisateur ---------------------- */
+// Connexion utilisateur
 window.login = function () {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    if (!email || !password) return alert("Email et mot de passe requis");
 
     signInWithEmailAndPassword(auth, email, password)
-        .then(userCred => {
+        .then(() => {
             loginUserDiv.style.display = "none";
             appDiv.style.display = "block";
-            initStation(userCred.user);
+            initStation();
         })
         .catch(err => alert("Erreur connexion : " + err.message));
 };
 
-/* ---------------------- Station météo ---------------------- */
-function initStation(user) {
+// Station
+function initStation() {
     const stationRef = ref(db, "station");
-
     onValue(stationRef, snap => {
         const data = snap.val() || {};
-
         tempExt.innerText = data.exterieur?.temperature ?? "--";
         humExt.innerText = data.exterieur?.humidite ?? "--";
         tempInt.innerText = data.interieur?.temperature ?? "--";
         humInt.innerText = data.interieur?.humidite ?? "--";
 
-        updateLampeButton(data.lampe ?? false);
+        const timeLabel = new Date().toLocaleTimeString();
+        if (data.interieur?.temperature !== undefined) {
+            chartInt.data.labels.push(timeLabel);
+            chartInt.data.datasets[0].data.push(data.interieur.temperature);
+            if (chartInt.data.labels.length > 20) {
+                chartInt.data.labels.shift();
+                chartInt.data.datasets[0].data.shift();
+            }
+            chartInt.update();
+        }
+        if (data.exterieur?.temperature !== undefined) {
+            chartExt.data.labels.push(timeLabel);
+            chartExt.data.datasets[0].data.push(data.exterieur.temperature);
+            if (chartExt.data.labels.length > 20) {
+                chartExt.data.labels.shift();
+                chartExt.data.datasets[0].data.shift();
+            }
+            chartExt.update();
+        }
     });
 }
 
-/* ---------------------- Lampe ---------------------- */
+// Lampe
 window.toggleLampe = async function () {
     const lampeRef = ref(db, "station/lampe");
     const snap = await get(lampeRef);
-    await set(lampeRef, !snap.val());
+    const newEtat = !snap.val();
+    await set(lampeRef, newEtat);
+    btnLampe.innerText = newEtat ? "Lampe : ON" : "Lampe : OFF";
 };
 
-function updateLampeButton(etat) {
-    btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
-}
-
-/* ---------------------- Historique ---------------------- */
+// Historique
 window.loadDateData = async function () {
     const date = document.getElementById("datePicker").value;
+    if (!date) return (dateData.innerHTML = "Choisissez une date");
     const snap = await get(ref(db, "historique/" + date));
-
     if (!snap.exists()) {
         dateData.innerHTML = "Pas de données";
     } else {
@@ -463,29 +389,29 @@ window.loadDateData = async function () {
     }
 };
 
-/* ---------------------- Déconnexion ---------------------- */
+// Déconnexion (user et admin)
 window.logout = function () {
     signOut(auth).then(() => {
         backToHome();
     });
 };
 
-/* ---------------------- Admin ---------------------- */
+// Admin
 window.adminLogin = async function () {
     const email = document.getElementById("adminEmail").value;
     const password = document.getElementById("adminPassword").value;
+    if (!email || !password) return alert("Email et mot de passe requis");
 
     try {
         const userCred = await signInWithEmailAndPassword(auth, email, password);
         const uid = userCred.user.uid;
         const userSnap = await get(ref(db, "users/" + uid));
-
-        if (!userSnap.exists() || userSnap.val().role !== "admin") {
-            alert("Pas admin");
-            signOut(auth);
+        const data = userSnap.val();
+        if (!data || data.role !== "admin") {
+            alert("Vous n'êtes pas administrateur");
+            await signOut(auth);
             return;
         }
-
         loginAdminDiv.style.display = "none";
         adminPanel.style.display = "block";
         loadUsersList();
@@ -496,4 +422,51 @@ window.adminLogin = async function () {
 
 async function loadUsersList() {
     const snap = await get(ref(db, "users"));
-    const usersDiv
+    const usersDiv = document.getElementById("usersList");
+    usersDiv.innerHTML = "";
+    if (!snap.exists()) {
+        usersDiv.innerHTML = "Aucun utilisateur";
+        return;
+    }
+    const users = snap.val();
+    for (const uid in users) {
+        const u = users[uid];
+        const div = document.createElement("div");
+        div.style.margin = "5px 0";
+        div.textContent = `${u.firstName ?? ""} ${u.lastName ?? ""} (${u.email}) [${u.role}]`;
+        usersDiv.appendChild(div);
+    }
+}
+
+// Auth state
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        backToHome();
+        return;
+    }
+    const snap = await get(ref(db, "users/" + user.uid));
+    const data = snap.val();
+    if (data && data.role === "admin") {
+        homeChoice.style.display = "none";
+        loginUserDiv.style.display = "none";
+        loginAdminDiv.style.display = "none";
+        signupDiv.style.display = "none";
+        personalInfoDiv.style.display = "none";
+        appDiv.style.display = "none";
+        adminPanel.style.display = "block";
+        loadUsersList();
+    } else {
+        homeChoice.style.display = "none";
+        loginUserDiv.style.display = "none";
+        loginAdminDiv.style.display = "none";
+        signupDiv.style.display = "none";
+        personalInfoDiv.style.display = "none";
+        adminPanel.style.display = "none";
+        appDiv.style.display = "block";
+        initStation();
+    }
+});
+</script>
+
+</body>
+</html>
