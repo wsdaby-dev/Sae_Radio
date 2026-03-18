@@ -3,41 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <title>Station Météo</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body {
-  background: #f0f2f5;
-  color: #222;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
+    background: #f0f2f5;
+    color: #222;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
 }
 h1 { margin-top: 20px; color: #333; }
 
 .card {
-  background: #fff;
-  border: 2px solid #00aaff;
-  border-radius: 15px;
-  padding: 20px;
-  margin: 20px auto;
-  width: 360px;
-  box-shadow: 0 0 10px #00aaff33;
+    background: #fff;
+    border: 2px solid #00aaff;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    width: 360px;
+    box-shadow: 0 0 10px #00aaff33;
 }
 
 input, button, select {
-  background: #fff;
-  color: #222;
-  border: 2px solid #00aaff;
-  padding: 10px;
-  margin: 5px;
-  border-radius: 8px;
-  font-size: 16px;
+    background: #fff;
+    color: #222;
+    border: 2px solid #00aaff;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
 button:hover {
-  background: #00aaff;
-  color: #fff;
-  cursor: pointer;
+    background: #00aaff;
+    color: #fff;
+    cursor: pointer;
 }
 
 #app, #personalInfoDiv, #logoutBtn, #adminPanel { display: none; }
@@ -45,93 +49,107 @@ button:hover {
 #calendarDiv { margin-top: 20px; }
 #btnLampe { min-width: 120px; font-weight: bold; }
 #dateData { margin-top:10px; font-weight:bold; color: #222; }
+
+canvas {
+    width: 100% !important;
+    height: 250px !important;
+}
 </style>
 </head>
 
 <body>
-<h1>🌡 Station Météo</h1>
+<h1>Station Météo</h1>
 
 <!-- Connexion Utilisateur -->
 <div id="loginDiv" class="card">
-  <h3>Connexion Utilisateur</h3>
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Mot de passe"><br>
-  <button onclick="login()">Se connecter</button>
+    <h3>Connexion Utilisateur</h3>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Mot de passe"><br>
+    <button onclick="login()">Se connecter</button>
 </div>
 
-<!-- Inscription Utilisateur -->
+<!-- Inscription -->
 <div id="signupDiv" class="card">
-  <h3>Créer un compte</h3>
-  <input type="email" id="signupEmail" placeholder="Email"><br>
-  <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
-  <button onclick="signup()">S’inscrire</button>
+    <h3>Créer un compte</h3>
+    <input type="email" id="signupEmail" placeholder="Email"><br>
+    <input type="password" id="signupPassword" placeholder="Mot de passe"><br>
+    <button onclick="signup()">S'inscrire</button>
 </div>
 
-<!-- Infos personnelles après inscription -->
+<!-- Infos personnelles -->
 <div id="personalInfoDiv" class="card">
-  <h3>Informations personnelles</h3>
-  <input type="text" id="firstName" placeholder="Prénom"><br>
-  <input type="text" id="lastName" placeholder="Nom"><br>
-  <input type="number" id="age" placeholder="Âge"><br>
-  <button onclick="savePersonalInfo()">Valider</button>
+    <h3>Informations personnelles</h3>
+    <input type="text" id="firstName" placeholder="Prénom"><br>
+    <input type="text" id="lastName" placeholder="Nom"><br>
+    <input type="number" id="age" placeholder="Âge"><br>
+    <button onclick="savePersonalInfo()">Valider</button>
 </div>
 
 <!-- Interface Utilisateur -->
 <div id="app">
-  <div class="card">
-    <h2>Station Météo</h2>
-    <p>Extérieur : Température <span id="tempExt">--</span>°C / Humidité <span id="humExt">--</span>%</p>
-    <p>Intérieur : Température <span id="tempInt">--</span>°C / Humidité <span id="humInt">--</span>%</p>
-    <button id="btnLampe" onclick="toggleLampe()">OFF</button>
-  </div>
 
-  <!-- Calendrier -->
-  <div id="calendarDiv" class="card">
-    <h3>Consulter les données météo par date</h3>
-    <input type="date" id="datePicker">
-    <button onclick="loadDateData()">Voir données</button>
-    <div id="dateData"></div>
-  </div>
+    <!-- Carte météo -->
+    <div class="card">
+        <h2>Station Météo</h2>
+        <p>Extérieur : Température <span id="tempExt">--</span>℃ / Humidité <span id="humExt">--</span>%</p>
+        <p>Intérieur : Température <span id="tempInt">--</span>℃ / Humidité <span id="humInt">--</span>%</p>
+        <button id="btnLampe" onclick="toggleLampe()">OFF</button>
+    </div>
 
-  <button id="logoutBtn" onclick="logout()" style="margin-top:20px; background:#ff4d4d; color:white;">Déconnexion</button>
+    <!-- Dashboard Graphiques -->
+    <div class="card">
+        <h3>Dashboard Graphiques</h3>
+        <canvas id="chartTempInt"></canvas>
+        <canvas id="chartTempExt"></canvas>
+    </div>
+
+    <!-- Calendrier -->
+    <div id="calendarDiv" class="card">
+        <h3>Consulter les données météo par date</h3>
+        <input type="date" id="datePicker">
+        <button onclick="loadDateData()">Voir données</button>
+        <div id="dateData"></div>
+    </div>
+
+    <button id="logoutBtn" onclick="logout()" style="margin-top:20px; background:#ff4d4d; color:white;">Déconnexion</button>
 </div>
 
 <!-- Connexion Admin -->
 <div id="adminLoginDiv" class="card">
-  <h3>Connexion Administrateur</h3>
-  <input type="email" id="adminEmail" placeholder="Email Admin"><br>
-  <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
-  <button onclick="adminLogin()">Se connecter Admin</button>
+    <h3>Connexion Administrateur</h3>
+    <input type="email" id="adminEmail" placeholder="Email Admin"><br>
+    <input type="password" id="adminPassword" placeholder="Mot de passe"><br>
+    <button onclick="adminLogin()">Se connecter Admin</button>
 </div>
 
-<!-- Interface Admin -->
+<!-- Panel Admin -->
 <div id="adminPanel" class="card">
-  <h3>Panel Administrateur</h3>
-  <div id="usersList"></div>
-  <button onclick="logoutAdmin()" style="margin-top:10px; background:#ff4d4d; color:white;">Déconnexion Admin</button>
+    <h3>Panel Administrateur</h3>
+    <div id="usersList"></div>
+    <button onclick="logoutAdmin()" style="margin-top:10px; background:#ff4d4d; color:white;">Déconnexion Admin</button>
 </div>
 
 <script type="module">
-// ---------- Firebase ----------
+/* ---------------------- Firebase ---------------------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
-  authDomain: "saeradio-4cb75.firebaseapp.com",
-  databaseURL: "https://saeradio-4cb75-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "saeradio-4cb75",
-  storageBucket: "saeradio-4cb75.appspot.com",
-  messagingSenderId: "88549628626",
-  appId: "1:88549628626:web:0f8ae72085e727e6452b0b"
+    apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
+    authDomain: "saeradio-4cb75.firebaseapp.com",
+    databaseURL: "https://saeradio-4cb75-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "saeradio-4cb75",
+    storageBucket: "saeradio-4cb75.appspot.com",
+    messagingSenderId: "88549628626",
+    appId: "1:88549628626:web:0f8ae72085e727e6452b0b"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// DOM
+/* ---------------------- DOM ---------------------- */
 const loginDiv = document.getElementById("loginDiv");
 const signupDiv = document.getElementById("signupDiv");
 const personalInfoDiv = document.getElementById("personalInfoDiv");
@@ -142,226 +160,261 @@ const tempInt = document.getElementById("tempInt");
 const humInt = document.getElementById("humInt");
 const dateData = document.getElementById("dateData");
 const btnLampe = document.getElementById("btnLampe");
-const logoutBtn = document.getElementById("logoutBtn");
 const adminLoginDiv = document.getElementById("adminLoginDiv");
 const adminPanel = document.getElementById("adminPanel");
 
-// ---------- UTILISATEUR ----------
-window.signup = async function() {
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
-  if(!email || !password) return alert("Email et mot de passe requis");
-  try {
-    await createUserWithEmailAndPassword(auth,email,password);
-    signupDiv.style.display="none";
-    personalInfoDiv.style.display="block";
-  } catch(err){ alert("Erreur inscription : "+err.message); }
-}
+/* ---------------------- Graphiques ---------------------- */
+let chartInt = new Chart(document.getElementById("chartTempInt"), {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [{
+            label: "Température intérieure (°C)",
+            data: [],
+            borderColor: "red",
+            borderWidth: 2
+        }]
+    }
+});
 
-window.savePersonalInfo = async function() {
-  const firstName = document.getElementById("firstName").value;
-  const lastName = document.getElementById("lastName").value;
-  const age = document.getElementById("age").value;
-  const user = auth.currentUser;
-  if(!user) return alert("Utilisateur non connecté !");
-  await set(ref(db,"users/"+user.uid),{role:"user", firstName,lastName,age,email:user.email});
-  personalInfoDiv.style.display="none";
-  appDiv.style.display="block";
-  logoutBtn.style.display="block";
-  initStation(user);
-}
+let chartExt = new Chart(document.getElementById("chartTempExt"), {
+    type: "line",
+    data: {
+        labels: [],
+        datasets: [{
+            label: "Température extérieure (°C)",
+            data: [],
+            borderColor: "blue",
+            borderWidth: 2
+        }]
+    }
+});
 
-window.login = function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  if(!email || !password) return alert("Email et mot de passe requis");
-  signInWithEmailAndPassword(auth,email,password)
-    .then(userCred=>{
-      loginDiv.style.display="none";
-      signupDiv.style.display="none";
-      personalInfoDiv.style.display="none";
-      appDiv.style.display="block";
-      logoutBtn.style.display="block";
-      initStation(userCred.user);
-    })
-    .catch(err=>alert("Erreur connexion : "+err.message));
-}
+/* ---------------------- Inscription ---------------------- */
+window.signup = async function () {
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+    if (!email || !password) return alert("Email et mot de passe requis");
 
-// ---------- STATION METEO ----------
-function initStation(user){
-  if(!user) return;
-  const stationRef = ref(db,"station");
-  onValue(stationRef,snap=>{
-    const data = snap.val() || {};
-    tempExt.innerText = data.exterieur?.temperature ?? "--";
-    humExt.innerText = data.exterieur?.humidite ?? "--";
-    tempInt.innerText = data.interieur?.temperature ?? "--";
-    humInt.innerText = data.interieur?.humidite ?? "--";
+    try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        signupDiv.style.display = "none";
+        personalInfoDiv.style.display = "block";
+    } catch (err) {
+        alert("Erreur inscription : " + err.message);
+    }
+};
 
-    const lampe = data.lampe ?? false;
-    updateLampeButton(lampe);
+window.savePersonalInfo = async function () {
+    const firstName = document.getElementById("firstName").value;
+    const lastName = document.getElementById("lastName").value;
+    const age = document.getElementById("age").value;
+    const user = auth.currentUser;
 
-    const today = new Date().toISOString().slice(0,10);
-    set(ref(db,"historique/"+today),{exterieur:data.exterieur||{},interieur:data.interieur||{}});
-  });
-}
+    if (!user) return alert("Utilisateur non connecté !");
 
-// Lampe ON/OFF
-window.toggleLampe = async function(){
-  const lampeRef = ref(db,"station/lampe");
-  const snap = await get(lampeRef);
-  const newEtat = !snap.val();
-  await set(lampeRef,newEtat);
-  updateLampeButton(newEtat);
-}
-function updateLampeButton(etat){
-  btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
-  btnLampe.style.background = etat ? "green":"red";
-  btnLampe.style.color="white";
-}
+    await set(ref(db, "users/" + user.uid), {
+        role: "user",
+        firstName,
+        lastName,
+        age,
+        email: user.email
+    });
 
-// Calendrier
-window.loadDateData = async function(){
-  const date = document.getElementById("datePicker").value;
-  if(!date) {
-    dateData.style.color = "red";
-    dateData.innerHTML = "⚠️ Veuillez choisir une date !";
-    return;
-  }
-  const snap = await get(ref(db,"historique/"+date));
-  if(!snap.exists()){
-    dateData.style.color = "red";
-    dateData.innerHTML = "⚠️ Pas de données pour cette date";
-  } else {
-    const d = snap.val();
-    dateData.style.color = "#222";
-    dateData.innerHTML = `
-      <strong>Extérieur :</strong> Température ${d.exterieur.temperature ?? "--"}°C / Humidité ${d.exterieur.humidite ?? "--"}%<br>
-      <strong>Intérieur :</strong> Température ${d.interieur.temperature ?? "--"}°C / Humidité ${d.interieur.humidite ?? "--"}%
-    `;
-  }
-}
-
-// Déconnexion utilisateur
-window.logout = function(){
-  signOut(auth).then(()=>{
-    loginDiv.style.display = "block";
-    signupDiv.style.display = "block";
     personalInfoDiv.style.display = "none";
-    appDiv.style.display = "none";
-    logoutBtn.style.display = "none";
-    adminLoginDiv.style.display = "block";
-    adminPanel.style.display = "none";
-  });
+    appDiv.style.display = "block";
+    initStation(user);
+};
+
+/* ---------------------- Connexion ---------------------- */
+window.login = function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) return alert("Email et mot de passe requis");
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then(userCred => {
+            loginDiv.style.display = "none";
+            signupDiv.style.display = "none";
+            appDiv.style.display = "block";
+            initStation(userCred.user);
+        })
+        .catch(err => alert("Erreur connexion : " + err.message));
+};
+
+/* ---------------------- Station météo ---------------------- */
+function initStation(user) {
+    if (!user) return;
+
+    const stationRef = ref(db, "station");
+
+    onValue(stationRef, snap => {
+        const data = snap.val() || {};
+
+        tempExt.innerText = data.exterieur?.temperature ?? "--";
+        humExt.innerText = data.exterieur?.humidite ?? "--";
+        tempInt.innerText = data.interieur?.temperature ?? "--";
+        humInt.innerText = data.interieur?.humidite ?? "--";
+
+        const lampe = data.lampe ?? false;
+        updateLampeButton(lampe);
+
+        /* --- Ajout aux graphiques --- */
+        const timeLabel = new Date().toLocaleTimeString();
+
+        if (data.interieur?.temperature !== undefined) {
+            chartInt.data.labels.push(timeLabel);
+            chartInt.data.datasets[0].data.push(data.interieur.temperature);
+            chartInt.update();
+        }
+
+        if (data.exterieur?.temperature !== undefined) {
+            chartExt.data.labels.push(timeLabel);
+            chartExt.data.datasets[0].data.push(data.exterieur.temperature);
+            chartExt.update();
+        }
+    });
 }
 
-// ---------- ADMIN ----------
-window.adminLogin = async function(){
-  const email = document.getElementById("adminEmail").value;
-  const password = document.getElementById("adminPassword").value;
-  if(!email || !password) return alert("Email et mot de passe requis");
+/* ---------------------- Lampe ---------------------- */
+window.toggleLampe = async function () {
+    const lampeRef = ref(db, "station/lampe");
+    const snap = await get(lampeRef);
+    const newEtat = !snap.val();
+    await set(lampeRef, newEtat);
+    updateLampeButton(newEtat);
+};
 
-  try {
-    const userCred = await signInWithEmailAndPassword(auth,email,password);
-    const uid = userCred.user.uid;
-    const userSnap = await get(ref(db,"users/"+uid));
-    const data = userSnap.val();
+function updateLampeButton(etat) {
+    btnLampe.innerText = etat ? "Lampe : ON" : "Lampe : OFF";
+    btnLampe.style.background = etat ? "green" : "red";
+    btnLampe.style.color = "white";
+}
 
-    if(!data || data.role !== "admin") {
-      alert("Vous n'êtes pas administrateur !");
-      await signOut(auth);
-      return;
+/* ---------------------- Historique ---------------------- */
+window.loadDateData = async function () {
+    const date = document.getElementById("datePicker").value;
+
+    if (!date) {
+        dateData.style.color = "red";
+        dateData.innerHTML = "Veuillez choisir une date !";
+        return;
     }
 
-    // Masquer formulaire admin
-    adminLoginDiv.style.display = "none";
+    const snap = await get(ref(db, "historique/" + date));
 
-    // Afficher panneau admin
-    adminPanel.style.display = "block";
-
-    // Masquer sections utilisateur
-    loginDiv.style.display = "none";
-    signupDiv.style.display = "none";
-    personalInfoDiv.style.display = "none";
-    appDiv.style.display = "none";
-
-    loadUsersList();
-  } catch(err){
-    alert("Erreur connexion admin : "+err.message);
-  }
-}
-
-async function loadUsersList(){
-  const snap = await get(ref(db,"users"));
-  const usersDiv = document.getElementById("usersList");
-  usersDiv.innerHTML = "";
-  if(!snap.exists()){ usersDiv.innerHTML = "Aucun utilisateur"; return; }
-
-  const users = snap.val();
-  for(const uid in users){
-    if(users[uid].role === "admin") continue;
-    const div = document.createElement("div");
-    div.style.margin="5px 0";
-    div.innerHTML = `
-      ${users[uid].firstName ?? ""} ${users[uid].lastName ?? ""} (${users[uid].email})
-      <button onclick="deleteUser('${uid}')">Supprimer</button>
-    `;
-    usersDiv.appendChild(div);
-  }
-}
-
-window.deleteUser = async function(uid){
-  if(!confirm("Supprimer cet utilisateur ?")) return;
-  await set(ref(db,"users/"+uid), null);
-  loadUsersList();
-}
-
-window.logoutAdmin = function(){
-  signOut(auth).then(()=>{
-    adminLoginDiv.style.display = "block";
-    adminPanel.style.display = "none";
-  });
-}
-
-// ---------- ON AUTH STATE CHANGE ----------
-onAuthStateChanged(auth, async (user) => {
-  if(user){
-    const snap = await get(ref(db,"users/"+user.uid));
-    const data = snap.val();
-
-    // MASQUER FORMULAIRE ADMIN TOUJOURS
-    adminLoginDiv.style.display = "none";
-
-    if(data?.role === "admin"){
-      // Admin connecté
-      adminPanel.style.display = "block";
-      loginDiv.style.display = "none";
-      signupDiv.style.display = "none";
-      personalInfoDiv.style.display = "none";
-      appDiv.style.display = "none";
-      logoutBtn.style.display = "none";
-      loadUsersList();
+    if (!snap.exists()) {
+        dateData.style.color = "red";
+        dateData.innerHTML = "Pas de données pour cette date";
     } else {
-      // Utilisateur normal connecté
-      adminPanel.style.display = "none";
-      loginDiv.style.display = "none";
-      signupDiv.style.display = "none";
-      personalInfoDiv.style.display = "none";
-      appDiv.style.display = "block";
-      logoutBtn.style.display = "block";
-      initStation(user);
+        const d = snap.val();
+        dateData.style.color = "#222";
+        dateData.innerHTML = `
+            <strong>Extérieur :</strong> ${d.exterieur.temperature ?? "--"} °C / ${d.exterieur.humidite ?? "--"}%<br>
+            <strong>Intérieur :</strong> ${d.interieur.temperature ?? "--"} °C / ${d.interieur.humidite ?? "--"}%
+        `;
     }
-  } else {
-    // Aucun utilisateur connecté
-    adminLoginDiv.style.display = "block";
-    adminPanel.style.display = "none";
-    loginDiv.style.display = "block";
-    signupDiv.style.display = "block";
-    personalInfoDiv.style.display = "none";
-    appDiv.style.display = "none";
-    logoutBtn.style.display = "none";
-  }
+};
+
+/* ---------------------- Déconnexion ---------------------- */
+window.logout = function () {
+    signOut(auth).then(() => {
+        loginDiv.style.display = "block";
+        signupDiv.style.display = "block";
+        appDiv.style.display = "none";
+    });
+};
+
+/* ---------------------- Admin ---------------------- */
+window.adminLogin = async function () {
+    const email = document.getElementById("adminEmail").value;
+    const password = document.getElementById("adminPassword").value;
+
+    if (!email || !password) return alert("Email et mot de passe requis");
+
+    try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCred.user.uid;
+        const userSnap = await get(ref(db, "users/" + uid));
+        const data = userSnap.val();
+
+        if (!data || data.role !== "admin") {
+            alert("Vous n'êtes pas administrateur !");
+            await signOut(auth);
+            return;
+        }
+
+        adminLoginDiv.style.display = "none";
+        adminPanel.style.display = "block";
+        loadUsersList();
+
+    } catch (err) {
+        alert("Erreur connexion admin : " + err.message);
+    }
+};
+
+async function loadUsersList() {
+    const snap = await get(ref(db, "users"));
+    const usersDiv = document.getElementById("usersList");
+    usersDiv.innerHTML = "";
+
+    if (!snap.exists()) {
+        usersDiv.innerHTML = "Aucun utilisateur";
+        return;
+    }
+
+    const users = snap.val();
+
+    for (const uid in users) {
+        if (users[uid].role === "admin") continue;
+
+        const div = document.createElement("div");
+        div.style.margin = "5px 0";
+        div.innerHTML = `
+            ${users[uid].firstName ?? ""} ${users[uid].lastName ?? ""} (${users[uid].email})
+            <button onclick="deleteUser('${uid}')">Supprimer</button>
+        `;
+        usersDiv.appendChild(div);
+    }
+}
+
+window.deleteUser = async function (uid) {
+    if (!confirm("Supprimer cet utilisateur ?")) return;
+    await set(ref(db, "users/" + uid), null);
+    loadUsersList();
+};
+
+window.logoutAdmin = function () {
+    signOut(auth).then(() => {
+        adminLoginDiv.style.display = "block";
+        adminPanel.style.display = "none";
+    });
+};
+
+/* ---------------------- Auth State ---------------------- */
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const snap = await get(ref(db, "users/" + user.uid));
+        const data = snap.val();
+
+        adminLoginDiv.style.display = "none";
+
+        if (data?.role === "admin") {
+            adminPanel.style.display = "block";
+            appDiv.style.display = "none";
+            loadUsersList();
+        } else {
+            adminPanel.style.display = "none";
+            appDiv.style.display = "block";
+            initStation(user);
+        }
+    } else {
+        adminLoginDiv.style.display = "block";
+        appDiv.style.display = "none";
+    }
 });
 </script>
+
 </body>
 </html>
