@@ -20,9 +20,7 @@
         color: #e5e7eb;
         text-align: center;
     }
-    h1 {
-        margin-top: 20px;
-    }
+    h1 { margin-top: 20px; }
     .card {
         background: #020617;
         border: 1px solid #1f2937;
@@ -51,21 +49,11 @@
         cursor: pointer;
         font-weight: 500;
     }
-    button:hover {
-        background: #1d4ed8;
-    }
-    .secondary {
-        background: #111827;
-    }
-    .secondary:hover {
-        background: #0f172a;
-    }
-    .danger {
-        background: #ef4444;
-    }
-    .danger:hover {
-        background: #b91c1c;
-    }
+    button:hover { background: #1d4ed8; }
+    .secondary { background: #111827; }
+    .secondary:hover { background: #0f172a; }
+    .danger { background: #ef4444; }
+    .danger:hover { background: #b91c1c; }
     .graph-container {
         background: #020617;
         border: 1px solid #1f2937;
@@ -305,7 +293,8 @@ auth.onAuthStateChanged(user => {
     db.ref("users/" + user.uid).once("value").then(snap => {
         const d = snap.val();
         if (!d) {
-            auth.signOut();
+            // pas d'entrée dans users -> on ne force pas la déconnexion,
+            // on laisse l'utilisateur sur l'écran actuel
             return;
         }
 
