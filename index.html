@@ -144,6 +144,7 @@
     <h3>Panel administrateur</h3>
     <h4 id="userCount" style="margin-bottom:10px;">Chargement...</h4>
     <div id="usersList"></div>
+    <p id="adminError" style="color:#f97373;font-size:13px;"></p>
     <button class="danger" onclick="logout()">Déconnexion admin</button>
 </div>
 
@@ -190,6 +191,7 @@ function backToHome() {
     document.getElementById("userLoginError").innerText = "";
     document.getElementById("adminLoginError").innerText = "";
     document.getElementById("signupError").innerText = "";
+    document.getElementById("adminError").innerText = "";
 }
 
 function showSignup() {
@@ -288,15 +290,11 @@ function logout() {
 
 // ================== REDIRECTION AUTO SELON RÔLE ==================
 auth.onAuthStateChanged(user => {
-    if (!user) return; // on laisse l'écran actuel
+    if (!user) return;
 
     db.ref("users/" + user.uid).once("value").then(snap => {
         const d = snap.val();
-        if (!d) {
-            // pas d'entrée dans users -> on ne force pas la déconnexion,
-            // on laisse l'utilisateur sur l'écran actuel
-            return;
-        }
+        if (!d) return;
 
         homeChoice.style.display = "none";
         loginUserDiv.style.display = "none";
@@ -474,8 +472,10 @@ function loadHistory() {
 function loadUsersList() {
     const usersDiv = document.getElementById("usersList");
     const userCountDiv = document.getElementById("userCount");
+    const adminErr = document.getElementById("adminError");
 
     usersDiv.innerHTML = "";
+    adminErr.innerText = "";
     userCountDiv.innerText = "Chargement...";
 
     db.ref("users").once("value").then(snap => {
@@ -511,8 +511,9 @@ function loadUsersList() {
         }
 
         userCountDiv.innerText = count + " utilisateur(s)";
-    }).catch(() => {
-        usersDiv.innerHTML = "Erreur de chargement.";
+    }).catch(e => {
+        console.error(e);
+        adminErr.innerText = "Erreur de chargement des utilisateurs.";
         userCountDiv.innerText = "Erreur";
     });
 }
