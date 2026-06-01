@@ -506,7 +506,9 @@ function initStation() {
                          interieur: { temperature: tInt, humidite: hInt } };
 
         // Ajout au graphique
-        pushPoint(new Date().toLocaleTimeString(), tInt, tExt, hInt, hExt);
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        pushPoint(timeLabel, tInt, tExt, hInt, hExt);
     });
 }
 
@@ -531,8 +533,34 @@ function changeInterval(sec) {
 function loadSavedInterval() {
     db.ref("config/intervalle").once("value").then(snap => {
         const v = snap.val();
-        changeInterval((v && intLabels[v]) ? v : 60);
+        if (v && v >= 1) {
+            if (intLabels[v]) {
+                changeInterval(v);          // bouton preset
+            } else {
+                applyIntervalSec(v);        // valeur custom
+            }
+        } else {
+            changeInterval(60);
+        }
     }).catch(() => changeInterval(60));
+}
+
+// Applique un nombre de secondes quelconque (utilisé par custom + loadSaved)
+function applyIntervalSec(total) {
+    total = Math.round(total);
+    document.querySelectorAll('.iv-btn[data-sec]').forEach(b => b.classList.remove('active'));
+    let label = '';
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h) label += h + 'h';
+    if (m) label += m + 'min';
+    if (s) label += s + 's';
+    if (!label) label = total + 's';
+    document.getElementById('intervalLabel').innerText = label;
+    if (recordTimerId) window.clearInterval(recordTimerId);
+    recordTimerId = window.setInterval(recordPoint, total * 1000);
+    return label;
 }
 
 function recordPoint() {
@@ -569,20 +597,7 @@ function applyCustomInterval() {
     if (total > 86400)         { err.innerText = 'Maximum 24h.'; return; }
 
     // Désactiver tous les boutons preset (aucun ne correspond)
-    document.querySelectorAll('.iv-btn[data-sec]').forEach(b => b.classList.remove('active'));
-
-    // Mettre à jour le label avec une forme lisible
-    let label = '';
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const s = total % 60;
-    if (h) label += h + 'h';
-    if (m) label += m + 'min';
-    if (s) label += s + 's';
-    document.getElementById('intervalLabel').innerText = label;
-
-    if (recordTimerId) window.clearInterval(recordTimerId);
-    recordTimerId = window.setInterval(recordPoint, total * 1000);
+    const label = applyIntervalSec(total);
     db.ref('config/intervalle').set(total);
 
     document.getElementById('customIntervalInput').value = '';
