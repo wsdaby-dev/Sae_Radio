@@ -38,6 +38,15 @@ input {
     border: 1px solid #1f2937;
     color: #e5e7eb;
 }
+#customIntervalInput {
+    width: 130px !important;
+    padding: 8px 12px !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+}
 button {
     background: #2563eb;
     color: white;
@@ -252,11 +261,10 @@ button:hover { background: #1d4ed8; }
             <button class="iv-btn" data-sec="600"  onclick="changeInterval(600)">10 min</button>
             <button class="iv-btn" data-sec="1800" onclick="changeInterval(1800)">30 min</button>
         </div>
-        <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px;">
+        <div style="display:flex !important;gap:8px;justify-content:center;align-items:center;margin-top:12px;flex-wrap:nowrap;">
             <input id="customIntervalInput" type="text" placeholder="ex: 2m, 45s, 1h"
-                style="width:130px !important;padding:8px 12px !important;margin:0 !important;font-size:13px;text-align:center;"
                 onkeydown="if(event.key==='Enter') applyCustomInterval()">
-            <button class="iv-btn" onclick="applyCustomInterval()" style="padding:8px 14px !important;">✓ OK</button>
+            <button class="iv-btn" onclick="applyCustomInterval()" style="padding:8px 14px !important;white-space:nowrap;">✓ OK</button>
         </div>
         <p id="customIntervalError" style="color:#f97373;font-size:12px;margin:4px 0 0;min-height:16px;"></p>
         <p id="intervalStatus" style="margin-top:6px;">Intervalle actuel : <strong id="intervalLabel">1 min</strong></p>
