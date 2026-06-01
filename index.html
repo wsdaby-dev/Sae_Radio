@@ -242,6 +242,8 @@ button:hover { background: #1d4ed8; }
     <div class="interval-card">
         <h3>⏱ Intervalle de prise de points</h3>
         <div class="interval-btn-group">
+            <button class="iv-btn" data-sec="5"    onclick="changeInterval(5)">5 s</button>
+            <button class="iv-btn" data-sec="10"   onclick="changeInterval(10)">10 s</button>
             <button class="iv-btn" data-sec="30"   onclick="changeInterval(30)">30 s</button>
             <button class="iv-btn active" data-sec="60"   onclick="changeInterval(60)">1 min</button>
             <button class="iv-btn" data-sec="300"  onclick="changeInterval(300)">5 min</button>
@@ -498,7 +500,7 @@ function toggleLampe() {
 // =================== INTERVALLE DE PRISE DE POINTS ===================
 let recordTimerId    = null;
 let currentIntSec    = 60;
-const intLabels      = { 30:"30 s", 60:"1 min", 300:"5 min", 600:"10 min", 1800:"30 min" };
+const intLabels      = { 5:"5 s", 10:"10 s", 30:"30 s", 60:"1 min", 300:"5 min", 600:"10 min", 1800:"30 min" };
 
 function changeInterval(sec) {
     currentIntSec = sec;
