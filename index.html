@@ -410,7 +410,7 @@ let chartTempInt = null, chartTempExt = null, chartHumInt = null, chartHumExt = 
 let labels      = [];
 let dataTempInt = [], dataTempExt = [], dataHumInt = [], dataHumExt = [];
 
-function makeChart(canvasId, label, color) {
+function makeChart(canvasId, label, color, dataArray) {
     const ctx = document.getElementById(canvasId).getContext("2d");
     return new Chart(ctx, {
         type: "line",
@@ -418,11 +418,11 @@ function makeChart(canvasId, label, color) {
             labels: labels,
             datasets: [{
                 label: label,
-                data: [],        // référence sera remplacée dans initCharts
+                data: dataArray,
                 borderColor: color,
                 backgroundColor: color.replace(")", ",0.1)").replace("rgb", "rgba"),
                 tension: 0.3,
-                pointRadius: 2
+                pointRadius: 3
             }]
         },
         options: {
@@ -436,19 +436,16 @@ function makeChart(canvasId, label, color) {
 function initCharts() {
     if (chartTempInt) { chartTempInt.destroy(); chartTempExt.destroy(); chartHumInt.destroy(); chartHumExt.destroy(); }
 
-    labels      = [];
-    dataTempInt = []; dataTempExt = []; dataHumInt = []; dataHumExt = [];
+    // Réinitialiser les tableaux globaux
+    labels.length = 0;
+    dataTempInt.length = 0; dataTempExt.length = 0;
+    dataHumInt.length  = 0; dataHumExt.length  = 0;
 
-    chartTempInt = makeChart("chartTempInt", "Température intérieure (°C)", "rgb(251,146,60)");
-    chartTempExt = makeChart("chartTempExt", "Température extérieure (°C)", "rgb(56,189,248)");
-    chartHumInt  = makeChart("chartHumInt",  "Humidité intérieure (%)",     "rgb(74,222,128)");
-    chartHumExt  = makeChart("chartHumExt",  "Humidité extérieure (%)",     "rgb(167,139,250)");
-
-    // Pointer les datasets vers les bons tableaux
-    chartTempInt.data.datasets[0].data = dataTempInt;
-    chartTempExt.data.datasets[0].data = dataTempExt;
-    chartHumInt.data.datasets[0].data  = dataHumInt;
-    chartHumExt.data.datasets[0].data  = dataHumExt;
+    // Passer directement les tableaux au chart — même référence, pas de réassignation
+    chartTempInt = makeChart("chartTempInt", "Température intérieure (°C)", "rgb(251,146,60)", dataTempInt);
+    chartTempExt = makeChart("chartTempExt", "Température extérieure (°C)", "rgb(56,189,248)",  dataTempExt);
+    chartHumInt  = makeChart("chartHumInt",  "Humidité intérieure (%)",     "rgb(74,222,128)",  dataHumInt);
+    chartHumExt  = makeChart("chartHumExt",  "Humidité extérieure (%)",     "rgb(167,139,250)", dataHumExt);
 }
 
 function pushPoint(t, tInt, tExt, hInt, hExt) {
@@ -456,15 +453,15 @@ function pushPoint(t, tInt, tExt, hInt, hExt) {
         labels.shift(); dataTempInt.shift(); dataTempExt.shift(); dataHumInt.shift(); dataHumExt.shift();
     }
     labels.push(t);
-    dataTempInt.push(tInt ?? null);
-    dataTempExt.push(tExt ?? null);
-    dataHumInt.push(hInt ?? null);
-    dataHumExt.push(hExt ?? null);
+    dataTempInt.push(tInt != null ? tInt : null);
+    dataTempExt.push(tExt != null ? tExt : null);
+    dataHumInt.push(hInt  != null ? hInt  : null);
+    dataHumExt.push(hExt  != null ? hExt  : null);
 
-    chartTempInt.update("none");
-    chartTempExt.update("none");
-    chartHumInt.update("none");
-    chartHumExt.update("none");
+    chartTempInt.update();
+    chartTempExt.update();
+    chartHumInt.update();
+    chartHumExt.update();
 }
 
 // =================== STATION TEMPS RÉEL ===================
@@ -512,66 +509,103 @@ function toggleLampe() {
 }
 
 // =================== INTERVALLE DE PRISE DE POINTS ===================
-let recordTimerId    = null;
-let currentIntSec    = 60;
-const intLabels      = { 5:"5 s", 10:"10 s", 30:"30 s", 60:"1 min", 300:"5 min", 600:"10 min", 1800:"30 min" };
+let recordTimerId = null;
+const intLabels   = { 5:"5s", 10:"10s", 30:"30s", 60:"1min", 300:"5min", 600:"10min", 1800:"30min" };
 
+// Construit un label lisible depuis un nombre de secondes
+function secToLabel(total) {
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    let label = '';
+    if (h) label += h + 'h';
+    if (m) label += m + 'min';
+    if (s) label += s + 's';
+    return label || total + 's';
+}
+
+// Applique n'importe quel intervalle en secondes
+function applyIntervalSec(total) {
+    total = Math.round(total);
+    if (total < 1) return;
+
+    // Stoppe l'ancien timer
+    if (recordTimerId) { window.clearInterval(recordTimerId); recordTimerId = null; }
+
+    // Mise à jour UI
+    const label = intLabels[total] || secToLabel(total);
+    document.getElementById('intervalLabel').innerText = label;
+    document.querySelectorAll('.iv-btn[data-sec]').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.sec) === total);
+    });
+
+    // Lance le nouveau timer
+    recordTimerId = window.setInterval(recordPoint, total * 1000);
+
+    // Sauvegarde Firebase
+    db.ref("config/intervalle").set(total);
+
+    return label;
+}
+
+// Boutons preset
 function changeInterval(sec) {
-    currentIntSec = sec;
-    document.querySelectorAll(".iv-btn").forEach(b => b.classList.toggle("active", parseInt(b.dataset.sec) === sec));
-    document.getElementById("intervalLabel").innerText = intLabels[sec] || sec + " s";
-    if (recordTimerId) window.clearInterval(recordTimerId);
-    recordTimerId = window.setInterval(recordPoint, sec * 1000);
-    db.ref("config/intervalle").set(sec);
+    applyIntervalSec(sec);
+}
+
+// Champ texte libre
+function applyCustomInterval() {
+    const raw = document.getElementById('customIntervalInput').value.trim().toLowerCase();
+    const err = document.getElementById('customIntervalError');
+    err.style.color = '#f97373';
+    err.innerText   = '';
+
+    if (!raw) { err.innerText = 'Entrez une valeur ex: 3s, 2m, 1h'; return; }
+
+    let total = 0;
+    // Cherche tous les groupes nombre+unité
+    const re = /(\d+(?:\.\d+)?)\s*(h|min|m|sec|s)?/gi;
+    let match, matched = false;
+    while ((match = re.exec(raw)) !== null) {
+        matched = true;
+        const val  = parseFloat(match[1]);
+        const unit = (match[2] || 's').toLowerCase();
+        if (unit === 'h')                    total += val * 3600;
+        else if (unit === 'm' || unit === 'min') total += val * 60;
+        else                                 total += val;
+    }
+    total = Math.round(total);
+    if (!matched || total < 1) { err.innerText = 'Format invalide. Exemples: 3s, 2m, 1h30m'; return; }
+    if (total > 86400)         { err.innerText = 'Maximum 24h.'; return; }
+
+    const label = applyIntervalSec(total);
+    document.getElementById('customIntervalInput').value = '';
+    err.style.color = '#4ade80';
+    err.innerText   = '✓ Appliqué : ' + label;
+    setTimeout(() => { err.innerText = ''; err.style.color = '#f97373'; }, 3000);
 }
 
 function loadSavedInterval() {
     db.ref("config/intervalle").once("value").then(snap => {
-        const v = snap.val();
-        if (v && v >= 1) {
-            if (intLabels[v]) {
-                changeInterval(v);          // bouton preset
-            } else {
-                applyIntervalSec(v);        // valeur custom
-            }
-        } else {
-            changeInterval(60);
-        }
-    }).catch(() => changeInterval(60));
-}
-
-// Applique un nombre de secondes quelconque (utilisé par custom + loadSaved)
-function applyIntervalSec(total) {
-    total = Math.round(total);
-    document.querySelectorAll('.iv-btn[data-sec]').forEach(b => b.classList.remove('active'));
-    let label = '';
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const s = total % 60;
-    if (h) label += h + 'h';
-    if (m) label += m + 'min';
-    if (s) label += s + 's';
-    if (!label) label = total + 's';
-    document.getElementById('intervalLabel').innerText = label;
-    if (recordTimerId) window.clearInterval(recordTimerId);
-    recordTimerId = window.setInterval(recordPoint, total * 1000);
-    return label;
+        const v = parseInt(snap.val());
+        applyIntervalSec((v && v >= 1) ? v : 60);
+    }).catch(() => applyIntervalSec(60));
 }
 
 function recordPoint() {
     if (!pendingPoint) return;
-    const now      = new Date();
-    const dateKey  = now.toISOString().slice(0, 10);
-    const timeKey  = now.toTimeString().slice(0, 8).replace(/:/g, "-");
+    const now       = new Date();
+    const dateKey   = now.toISOString().slice(0, 10);
+    const timeKey   = now.toTimeString().slice(0, 8).replace(/:/g, "-");
     const timeLabel = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 
     // Enregistrement Firebase
     db.ref("historique/" + dateKey + "/" + timeKey).set(pendingPoint);
 
-    // Ajout au graphique au rythme de l'intervalle choisi
+    // Ajout au graphique
     const ext = pendingPoint.exterieur || {};
-    const int = pendingPoint.interieur || {};
-    pushPoint(timeLabel, int.temperature, ext.temperature, int.humidite, ext.humidite);
+    const inn = pendingPoint.interieur || {};
+    pushPoint(timeLabel, inn.temperature, ext.temperature, inn.humidite, ext.humidite);
 }
 
 // =================== INTERVALLE PERSONNALISÉ ===================
