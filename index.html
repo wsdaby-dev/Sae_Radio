@@ -252,7 +252,14 @@ button:hover { background: #1d4ed8; }
             <button class="iv-btn" data-sec="600"  onclick="changeInterval(600)">10 min</button>
             <button class="iv-btn" data-sec="1800" onclick="changeInterval(1800)">30 min</button>
         </div>
-        <p id="intervalStatus">Intervalle actuel : <strong id="intervalLabel">1 min</strong></p>
+        <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px;">
+            <input id="customIntervalInput" type="text" placeholder="ex: 2m, 45s, 1h"
+                style="width:130px !important;padding:8px 12px !important;margin:0 !important;font-size:13px;text-align:center;"
+                onkeydown="if(event.key==='Enter') applyCustomInterval()">
+            <button class="iv-btn" onclick="applyCustomInterval()" style="padding:8px 14px !important;">✓ OK</button>
+        </div>
+        <p id="customIntervalError" style="color:#f97373;font-size:12px;margin:4px 0 0;min-height:16px;"></p>
+        <p id="intervalStatus" style="margin-top:6px;">Intervalle actuel : <strong id="intervalLabel">1 min</strong></p>
     </div>
 
     <!-- Historique -->
@@ -526,6 +533,54 @@ function recordPoint() {
     const dateKey = now.toISOString().slice(0, 10);
     const timeKey = now.toTimeString().slice(0, 8).replace(/:/g, "-");
     db.ref("historique/" + dateKey + "/" + timeKey).set(pendingPoint);
+}
+
+// =================== INTERVALLE PERSONNALISÉ ===================
+function applyCustomInterval() {
+    const raw = document.getElementById('customIntervalInput').value.trim().toLowerCase();
+    const err = document.getElementById('customIntervalError');
+    err.innerText = '';
+
+    if (!raw) { err.innerText = 'Entrez une valeur (ex: 2m, 45s, 1h).'; return; }
+
+    // Parse: supporte 30s, 2m, 1h, 1h30m, 1m30s, 90, etc.
+    let total = 0;
+    const re = /(\d+(?:\.\d+)?)\s*(h|m|min|s|sec)?/gi;
+    let match;
+    let matched = false;
+    while ((match = re.exec(raw)) !== null) {
+        matched = true;
+        const val  = parseFloat(match[1]);
+        const unit = (match[2] || 's').toLowerCase();
+        if      (unit === 'h')                total += val * 3600;
+        else if (unit === 'm' || unit === 'min') total += val * 60;
+        else                                  total += val;
+    }
+    total = Math.round(total);
+    if (!matched || total < 1) { err.innerText = 'Format non reconnu. Essayez: 2m, 45s, 1h30m'; return; }
+    if (total > 86400)         { err.innerText = 'Maximum 24h.'; return; }
+
+    // Désactiver tous les boutons preset (aucun ne correspond)
+    document.querySelectorAll('.iv-btn[data-sec]').forEach(b => b.classList.remove('active'));
+
+    // Mettre à jour le label avec une forme lisible
+    let label = '';
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h) label += h + 'h';
+    if (m) label += m + 'min';
+    if (s) label += s + 's';
+    document.getElementById('intervalLabel').innerText = label;
+
+    if (recordTimerId) window.clearInterval(recordTimerId);
+    recordTimerId = window.setInterval(recordPoint, total * 1000);
+    db.ref('config/intervalle').set(total);
+
+    document.getElementById('customIntervalInput').value = '';
+    err.style.color = '#4ade80';
+    err.innerText = '✓ Intervalle appliqué : ' + label;
+    setTimeout(() => { err.innerText = ''; err.style.color = '#f97373'; }, 3000);
 }
 
 // =================== HISTORIQUE ===================
