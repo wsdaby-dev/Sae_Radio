@@ -504,11 +504,6 @@ function initStation() {
         // Point courant pour l'enregistrement périodique
         pendingPoint = { exterieur: { temperature: tExt, humidite: hExt },
                          interieur: { temperature: tInt, humidite: hInt } };
-
-        // Ajout au graphique
-        const now = new Date();
-        const timeLabel = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-        pushPoint(timeLabel, tInt, tExt, hInt, hExt);
     });
 }
 
@@ -565,10 +560,18 @@ function applyIntervalSec(total) {
 
 function recordPoint() {
     if (!pendingPoint) return;
-    const now     = new Date();
-    const dateKey = now.toISOString().slice(0, 10);
-    const timeKey = now.toTimeString().slice(0, 8).replace(/:/g, "-");
+    const now      = new Date();
+    const dateKey  = now.toISOString().slice(0, 10);
+    const timeKey  = now.toTimeString().slice(0, 8).replace(/:/g, "-");
+    const timeLabel = now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+    // Enregistrement Firebase
     db.ref("historique/" + dateKey + "/" + timeKey).set(pendingPoint);
+
+    // Ajout au graphique au rythme de l'intervalle choisi
+    const ext = pendingPoint.exterieur || {};
+    const int = pendingPoint.interieur || {};
+    pushPoint(timeLabel, int.temperature, ext.temperature, int.humidite, ext.humidite);
 }
 
 // =================== INTERVALLE PERSONNALISÉ ===================
