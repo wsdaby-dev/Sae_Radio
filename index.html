@@ -3,174 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <title>Station Météo</title>
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <style>
-    body {
-        margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, #1e293b, #020617);
-        color: #e5e7eb;
-        text-align: center;
-    }
-    h1 { margin-top: 20px; }
-    .card {
-        background: #020617;
-        border: 1px solid #1f2937;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        padding: 20px;
-        margin: 20px auto;
-        width: 380px;
-        border-radius: 18px;
-    }
-    input, button {
-        width: 85%;
-        padding: 10px;
-        margin: 6px;
-        border-radius: 10px;
-        border: none;
-        font-size: 14px;
-    }
-    input {
-        background: #020617;
-        border: 1px solid #1f2937;
-        color: #e5e7eb;
-    }
-    button {
-        background: #2563eb;
-        color: white;
-        cursor: pointer;
-        font-weight: 500;
-    }
-    button:hover { background: #1d4ed8; }
-    .secondary { background: #111827; }
-    .secondary:hover { background: #0f172a; }
-    .danger { background: #ef4444; }
-    .danger:hover { background: #b91c1c; }
-    .graph-container {
-        background: #020617;
-        border: 1px solid #1f2937;
-        padding: 15px;
-        margin: 10px auto;
-        width: 95%;
-        border-radius: 18px;
-    }
-    .user-card {
-        border: 1px solid #1f2937;
-        border-radius: 12px;
-        padding: 10px;
-        margin: 10px 0;
-        text-align: left;
-        font-size: 14px;
-    }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #1e293b, #020617);
+    color: #e5e7eb;
+    text-align: center;
+}
+h1 { margin-top: 20px; }
+.card {
+    background: #020617;
+    border: 1px solid #1f2937;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    padding: 20px;
+    margin: 20px auto;
+    width: 380px;
+    border-radius: 18px;
+}
+input, button {
+    width: 85%;
+    padding: 10px;
+    margin: 6px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+}
+input {
+    background: #020617;
+    border: 1px solid #1f2937;
+    color: #e5e7eb;
+}
+button {
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+button:hover { background: #1d4ed8; }
+.secondary { background: #111827; }
+.secondary:hover { background: #0f172a; }
+.danger { background: #ef4444; }
+.danger:hover { background: #b91c1c; }
+.graph-container {
+    background: #020617;
+    border: 1px solid #1f2937;
+    padding: 15px;
+    margin: 10px auto;
+    width: 95%;
+    border-radius: 18px;
+}
+.user-card {
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: left;
+    font-size: 14px;
+}
 
-    /* ── Cadre températures instantanées ── */
-    .temp-display-card {
-        background: #020617;
-        border: 1px solid #1f2937;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        padding: 20px 20px 14px;
-        margin: 20px auto;
-        width: 380px;
-        border-radius: 18px;
-    }
-    .temp-display-card h3 {
-        margin: 0 0 14px;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #6b7280;
-    }
-    .temp-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    .temp-tile {
-        background: #0f172a;
-        border: 1px solid #1f2937;
-        border-radius: 14px;
-        padding: 14px 10px 12px;
-        position: relative;
-    }
-    .temp-tile .tile-label {
-        font-size: 11px;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        margin-bottom: 6px;
-    }
-    .temp-tile .tile-value {
-        font-size: 2rem;
-        font-weight: 700;
-        line-height: 1;
-        transition: color .4s;
-    }
-    .temp-tile .tile-unit {
-        font-size: 13px;
-        color: #9ca3af;
-        margin-left: 2px;
-    }
-    /* couleurs par capteur */
-    .tile-ext-t  .tile-value { color: #38bdf8; }
-    .tile-int-t  .tile-value { color: #fb923c; }
-    .tile-ext-h  .tile-value { color: #a78bfa; }
-    .tile-int-h  .tile-value { color: #4ade80; }
+/* Cadre températures instantanées */
+.temp-display-card {
+    background: #020617;
+    border: 1px solid #1f2937;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    padding: 20px 20px 14px;
+    margin: 20px auto;
+    width: 380px;
+    border-radius: 18px;
+    box-sizing: border-box;
+}
+.temp-display-card h3 {
+    margin: 0 0 14px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #6b7280;
+}
+.temp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.temp-tile {
+    background: #0f172a;
+    border: 1px solid #1f2937;
+    border-radius: 14px;
+    padding: 14px 10px 12px;
+}
+.temp-tile .tile-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
+}
+.temp-tile .tile-val {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.temp-tile .tile-unit {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-left: 2px;
+    font-weight: 400;
+}
+.tile-ext-t .tile-val { color: #38bdf8; }
+.tile-int-t .tile-val { color: #fb923c; }
+.tile-ext-h .tile-val { color: #a78bfa; }
+.tile-int-h .tile-val { color: #4ade80; }
 
-    /* ── Sélecteur d'intervalle ── */
-    .interval-card {
-        background: #020617;
-        border: 1px solid #1f2937;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        padding: 16px 20px;
-        margin: 20px auto;
-        width: 380px;
-        border-radius: 18px;
-    }
-    .interval-card h3 {
-        margin: 0 0 12px;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #6b7280;
-    }
-    .interval-btn-group {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    .interval-btn {
-        width: auto;
-        padding: 8px 16px;
-        font-size: 13px;
-        border-radius: 10px;
-        background: #111827;
-        color: #e5e7eb;
-        cursor: pointer;
-        border: 1px solid #1f2937;
-        font-weight: 500;
-        transition: background .2s, border-color .2s;
-        margin: 0;
-    }
-    .interval-btn:hover { background: #1f2937; }
-    .interval-btn.active {
-        background: #2563eb;
-        border-color: #3b82f6;
-        color: #fff;
-    }
-    #intervalStatus {
-        margin-top: 10px;
-        font-size: 12px;
-        color: #9ca3af;
-    }
+/* Sélecteur d'intervalle */
+.interval-card {
+    background: #020617;
+    border: 1px solid #1f2937;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    padding: 16px 20px;
+    margin: 20px auto;
+    width: 380px;
+    border-radius: 18px;
+    box-sizing: border-box;
+}
+.interval-card h3 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #6b7280;
+}
+.interval-btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.iv-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 10px;
+    background: #111827;
+    color: #e5e7eb;
+    cursor: pointer;
+    border: 1px solid #1f2937;
+    font-weight: 500;
+    transition: background .2s, border-color .2s;
+    width: auto;
+    margin: 0;
+}
+.iv-btn:hover { background: #1f2937; }
+.iv-btn.active { background: #2563eb; border-color: #3b82f6; color: #fff; }
+#intervalStatus { margin-top: 10px; font-size: 12px; color: #9ca3af; }
 </style>
 </head>
 <body>
@@ -220,30 +207,30 @@
 <!-- Interface utilisateur -->
 <div id="app" style="display:none;">
 
-    <!-- ① Cadre températures instantanées -->
+    <!-- Cadre valeurs instantanées -->
     <div class="temp-display-card">
-        <h3>🌡 Températures &amp; Humidités instantanées</h3>
+        <h3>🌡 Valeurs instantanées</h3>
         <div class="temp-grid">
             <div class="temp-tile tile-ext-t">
-                <div class="tile-label">🌬 Extérieur – Temp.</div>
-                <div class="tile-value" id="bigTempExt">--<span class="tile-unit">°C</span></div>
+                <div class="tile-label">🌬 Ext. – Temp.</div>
+                <div class="tile-val"><span id="bigTempExt">--</span><span class="tile-unit">°C</span></div>
             </div>
             <div class="temp-tile tile-int-t">
-                <div class="tile-label">🏠 Intérieur – Temp.</div>
-                <div class="tile-value" id="bigTempInt">--<span class="tile-unit">°C</span></div>
+                <div class="tile-label">🏠 Int. – Temp.</div>
+                <div class="tile-val"><span id="bigTempInt">--</span><span class="tile-unit">°C</span></div>
             </div>
             <div class="temp-tile tile-ext-h">
-                <div class="tile-label">💧 Extérieur – Hum.</div>
-                <div class="tile-value" id="bigHumExt">--<span class="tile-unit">%</span></div>
+                <div class="tile-label">💧 Ext. – Hum.</div>
+                <div class="tile-val"><span id="bigHumExt">--</span><span class="tile-unit">%</span></div>
             </div>
             <div class="temp-tile tile-int-h">
-                <div class="tile-label">💧 Intérieur – Hum.</div>
-                <div class="tile-value" id="bigHumInt">--<span class="tile-unit">%</span></div>
+                <div class="tile-label">💧 Int. – Hum.</div>
+                <div class="tile-val"><span id="bigHumInt">--</span><span class="tile-unit">%</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Données texte + lampe (conservé) -->
+    <!-- Données texte + lampe -->
     <div class="card">
         <h2>Temps réel</h2>
         <p>Extérieur : <span id="tempExt">--</span> °C / <span id="humExt">--</span> %</p>
@@ -251,15 +238,15 @@
         <button id="btnLampe" onclick="toggleLampe()">Lampe : OFF</button>
     </div>
 
-    <!-- ② Sélecteur d'intervalle de prise de points -->
+    <!-- Sélecteur d'intervalle -->
     <div class="interval-card">
         <h3>⏱ Intervalle de prise de points</h3>
         <div class="interval-btn-group">
-            <button class="interval-btn" data-sec="30"  onclick="setInterval_(30)">30 s</button>
-            <button class="interval-btn active" data-sec="60"  onclick="setInterval_(60)">1 min</button>
-            <button class="interval-btn" data-sec="300" onclick="setInterval_(300)">5 min</button>
-            <button class="interval-btn" data-sec="600" onclick="setInterval_(600)">10 min</button>
-            <button class="interval-btn" data-sec="1800" onclick="setInterval_(1800)">30 min</button>
+            <button class="iv-btn" data-sec="30"   onclick="changeInterval(30)">30 s</button>
+            <button class="iv-btn active" data-sec="60"   onclick="changeInterval(60)">1 min</button>
+            <button class="iv-btn" data-sec="300"  onclick="changeInterval(300)">5 min</button>
+            <button class="iv-btn" data-sec="600"  onclick="changeInterval(600)">10 min</button>
+            <button class="iv-btn" data-sec="1800" onclick="changeInterval(1800)">30 min</button>
         </div>
         <p id="intervalStatus">Intervalle actuel : <strong id="intervalLabel">1 min</strong></p>
     </div>
@@ -272,13 +259,13 @@
         <p id="historyStatus" style="font-size:13px;color:#9ca3af;"></p>
     </div>
 
+    <!-- Graphiques -->
     <div class="graph-container"><canvas id="chartTempInt"></canvas></div>
     <div class="graph-container"><canvas id="chartTempExt"></canvas></div>
-    <div class="graph-container"><canvas id="chartHum"></canvas></div>
-    <!-- ③ Nouveau graphique humidité extérieure -->
+    <div class="graph-container"><canvas id="chartHumInt"></canvas></div>
     <div class="graph-container"><canvas id="chartHumExt"></canvas></div>
 
-    <button class="danger" onclick="logout()">Déconnexion</button>
+    <button class="danger" onclick="logout()" style="margin-bottom:40px;">Déconnexion</button>
 </div>
 
 <!-- Panel admin -->
@@ -291,7 +278,7 @@
 </div>
 
 <script>
-// ================== CONFIG FIREBASE ==================
+// =================== FIREBASE ===================
 var firebaseConfig = {
     apiKey: "AIzaSyAayeCDVcmcFpX3qT126MFJMUGCE3S_xtY",
     authDomain: "saeradio-4cb75.firebaseapp.com",
@@ -302,49 +289,29 @@ var firebaseConfig = {
     appId: "1:88549628626:web:0f8ae72085e727e6452b0b"
 };
 firebase.initializeApp(firebaseConfig);
-
 var auth = firebase.auth();
-var db = firebase.database();
+var db   = firebase.database();
 
-// ================== NAVIGATION ==================
-const homeChoice     = document.getElementById("homeChoice");
-const loginUserDiv   = document.getElementById("loginUserDiv");
-const loginAdminDiv  = document.getElementById("loginAdminDiv");
-const signupDiv      = document.getElementById("signupDiv");
-const appDiv         = document.getElementById("app");
-const adminPanel     = document.getElementById("adminPanel");
+// =================== NAVIGATION ===================
+const homeChoice    = document.getElementById("homeChoice");
+const loginUserDiv  = document.getElementById("loginUserDiv");
+const loginAdminDiv = document.getElementById("loginAdminDiv");
+const signupDiv     = document.getElementById("signupDiv");
+const appDiv        = document.getElementById("app");
+const adminPanel    = document.getElementById("adminPanel");
 
-document.getElementById("btnGoUser").onclick = () => {
-    homeChoice.style.display = "none";
-    loginUserDiv.style.display = "block";
-};
-document.getElementById("btnGoAdmin").onclick = () => {
-    homeChoice.style.display = "none";
-    loginAdminDiv.style.display = "block";
-};
+document.getElementById("btnGoUser").onclick  = () => { homeChoice.style.display="none"; loginUserDiv.style.display="block"; };
+document.getElementById("btnGoAdmin").onclick = () => { homeChoice.style.display="none"; loginAdminDiv.style.display="block"; };
 
 function backToHome() {
     homeChoice.style.display = "block";
-    loginUserDiv.style.display = "none";
-    loginAdminDiv.style.display = "none";
-    signupDiv.style.display = "none";
-    appDiv.style.display = "none";
-    adminPanel.style.display = "none";
-    document.getElementById("userLoginError").innerText = "";
-    document.getElementById("adminLoginError").innerText = "";
-    document.getElementById("signupError").innerText = "";
-    document.getElementById("adminError").innerText = "";
+    [loginUserDiv, loginAdminDiv, signupDiv, appDiv, adminPanel].forEach(el => el.style.display = "none");
+    ["userLoginError","adminLoginError","signupError","adminError"].forEach(id => document.getElementById(id).innerText = "");
 }
-function showSignup() {
-    loginUserDiv.style.display = "none";
-    signupDiv.style.display = "block";
-}
-function backToLoginUser() {
-    signupDiv.style.display = "none";
-    loginUserDiv.style.display = "block";
-}
+function showSignup()      { loginUserDiv.style.display="none"; signupDiv.style.display="block"; }
+function backToLoginUser() { signupDiv.style.display="none";    loginUserDiv.style.display="block"; }
 
-// ================== AUTH UTILISATEUR ==================
+// =================== AUTH UTILISATEUR ===================
 function signup() {
     const email    = document.getElementById("signupEmail").value;
     const pass     = document.getElementById("signupPassword").value;
@@ -352,14 +319,10 @@ function signup() {
     const age      = document.getElementById("signupAge").value;
     const err      = document.getElementById("signupError");
     err.innerText  = "";
-
-    if (!email || !pass || !username || !age) {
-        err.innerText = "Tous les champs sont obligatoires.";
-        return;
-    }
+    if (!email || !pass || !username || !age) { err.innerText = "Tous les champs sont obligatoires."; return; }
     auth.createUserWithEmailAndPassword(email, pass)
         .then(cred => db.ref("users/" + cred.user.uid).set({ email, username, age, role: "user" }))
-        .then(() => { signupDiv.style.display = "none"; appDiv.style.display = "block"; initStation(); initCharts(); })
+        .then(() => { signupDiv.style.display="none"; appDiv.style.display="block"; startApp(); })
         .catch(e => { err.innerText = e.message; });
 }
 
@@ -369,11 +332,11 @@ function login() {
     const err   = document.getElementById("userLoginError");
     err.innerText = "";
     auth.signInWithEmailAndPassword(email, pass)
-        .then(() => { loginUserDiv.style.display = "none"; appDiv.style.display = "block"; initStation(); initCharts(); })
+        .then(() => { loginUserDiv.style.display="none"; appDiv.style.display="block"; startApp(); })
         .catch(e => { err.innerText = e.message; });
 }
 
-// ================== AUTH ADMIN ==================
+// =================== AUTH ADMIN ===================
 function adminLogin() {
     const email = document.getElementById("adminEmail").value;
     const pass  = document.getElementById("adminPassword").value;
@@ -391,200 +354,177 @@ function adminLogin() {
         .catch(e => { err.innerText = e.message; });
 }
 
-function logout() {
-    auth.signOut().then(() => backToHome());
-}
+function logout() { auth.signOut().then(() => backToHome()); }
 
-// ================== REDIRECTION AUTO SELON RÔLE ==================
+// =================== REDIRECTION AUTO ===================
 auth.onAuthStateChanged(user => {
     if (!user) return;
     db.ref("users/" + user.uid).once("value").then(snap => {
         const d = snap.val();
         if (!d) return;
         homeChoice.style.display = "none";
-        loginUserDiv.style.display = "none";
-        loginAdminDiv.style.display = "none";
-        signupDiv.style.display = "none";
+        [loginUserDiv, loginAdminDiv, signupDiv].forEach(el => el.style.display = "none");
         if (d.role === "admin") {
             adminPanel.style.display = "block";
-            appDiv.style.display = "none";
             loadUsersList();
         } else {
-            adminPanel.style.display = "none";
             appDiv.style.display = "block";
-            initStation();
-            initCharts();
+            startApp();
         }
     });
 });
 
-// ================== INTERVALLE DE PRISE DE POINTS ==================
-let currentIntervalSec = 60;   // par défaut 1 min
-let intervalTimer = null;
-let pendingPoint = null;        // dernier snapshot reçu en attente d'enregistrement
+// =================== INIT APP (charts + station dans le bon ordre) ===================
+let appStarted = false;
 
-const intervalLabels = { 30: "30 s", 60: "1 min", 300: "5 min", 600: "10 min", 1800: "30 min" };
+function startApp() {
+    if (appStarted) return;
+    appStarted = true;
+    initCharts();   // 1. créer les charts EN PREMIER
+    initStation();  // 2. puis écouter Firebase
+    loadSavedInterval();
+}
 
-function setInterval_(sec) {
-    currentIntervalSec = sec;
-    // Mise à jour boutons actifs
-    document.querySelectorAll(".interval-btn").forEach(btn => {
-        btn.classList.toggle("active", parseInt(btn.dataset.sec) === sec);
+// =================== GRAPHIQUES ===================
+let chartTempInt = null, chartTempExt = null, chartHumInt = null, chartHumExt = null;
+
+let labels      = [];
+let dataTempInt = [], dataTempExt = [], dataHumInt = [], dataHumExt = [];
+
+function makeChart(canvasId, label, color) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    return new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: [],        // référence sera remplacée dans initCharts
+                borderColor: color,
+                backgroundColor: color.replace(")", ",0.1)").replace("rgb", "rgba"),
+                tension: 0.3,
+                pointRadius: 2
+            }]
+        },
+        options: {
+            animation: false,
+            scales: { x: { ticks: { color: "#9ca3af", maxTicksLimit: 8 } }, y: { ticks: { color: "#9ca3af" } } },
+            plugins: { legend: { labels: { color: "#e5e7eb" } } }
+        }
     });
-    document.getElementById("intervalLabel").innerText = intervalLabels[sec] || sec + " s";
-
-    // Réinitialise le timer
-    if (intervalTimer) clearInterval(intervalTimer);
-    intervalTimer = setInterval(recordPoint, sec * 1000);
-
-    // Optionnel : enregistrer l'intervalle choisi dans Firebase
-    db.ref("config/intervalle").set(sec);
 }
-
-function recordPoint() {
-    if (!pendingPoint) return;
-    const d = pendingPoint;
-    const now = new Date();
-    const dateKey = now.toISOString().slice(0, 10);
-    const timeKey = now.toTimeString().slice(0, 8).replace(/:/g, "-");
-    db.ref("historique/" + dateKey + "/" + timeKey).set(d);
-}
-
-// ================== GRAPHIQUES ==================
-let chartTempInt = null;
-let chartTempExt = null;
-let chartHum     = null;
-let chartHumExt  = null;   // ← nouveau
-
-let realtimeLabels   = [];
-let realtimeIntData  = [];
-let realtimeExtData  = [];
-let realtimeHumData  = [];
-let realtimeHumExtData = []; // ← nouveau
 
 function initCharts() {
-    if (chartTempInt) chartTempInt.destroy();
-    if (chartTempExt) chartTempExt.destroy();
-    if (chartHum)     chartHum.destroy();
-    if (chartHumExt)  chartHumExt.destroy();
+    if (chartTempInt) { chartTempInt.destroy(); chartTempExt.destroy(); chartHumInt.destroy(); chartHumExt.destroy(); }
 
-    const ctxInt    = document.getElementById("chartTempInt").getContext("2d");
-    const ctxExt    = document.getElementById("chartTempExt").getContext("2d");
-    const ctxHum    = document.getElementById("chartHum").getContext("2d");
-    const ctxHumExt = document.getElementById("chartHumExt").getContext("2d");
+    labels      = [];
+    dataTempInt = []; dataTempExt = []; dataHumInt = []; dataHumExt = [];
 
-    chartTempInt = new Chart(ctxInt, {
-        type: "line",
-        data: {
-            labels: realtimeLabels,
-            datasets: [{ label: "Température intérieure (°C)", data: realtimeIntData, borderColor: "orange", backgroundColor: "rgba(249,115,22,0.1)", tension: 0.3 }]
-        }
-    });
+    chartTempInt = makeChart("chartTempInt", "Température intérieure (°C)", "rgb(251,146,60)");
+    chartTempExt = makeChart("chartTempExt", "Température extérieure (°C)", "rgb(56,189,248)");
+    chartHumInt  = makeChart("chartHumInt",  "Humidité intérieure (%)",     "rgb(74,222,128)");
+    chartHumExt  = makeChart("chartHumExt",  "Humidité extérieure (%)",     "rgb(167,139,250)");
 
-    chartTempExt = new Chart(ctxExt, {
-        type: "line",
-        data: {
-            labels: realtimeLabels,
-            datasets: [{ label: "Température extérieure (°C)", data: realtimeExtData, borderColor: "deepskyblue", backgroundColor: "rgba(56,189,248,0.1)", tension: 0.3 }]
-        }
-    });
-
-    chartHum = new Chart(ctxHum, {
-        type: "line",
-        data: {
-            labels: realtimeLabels,
-            datasets: [{ label: "Humidité intérieure (%)", data: realtimeHumData, borderColor: "lightgreen", backgroundColor: "rgba(74,222,128,0.1)", tension: 0.3 }]
-        }
-    });
-
-    // ← Nouveau graphique humidité extérieure
-    chartHumExt = new Chart(ctxHumExt, {
-        type: "line",
-        data: {
-            labels: realtimeLabels,
-            datasets: [{ label: "Humidité extérieure (%)", data: realtimeHumExtData, borderColor: "#a78bfa", backgroundColor: "rgba(167,139,250,0.1)", tension: 0.3 }]
-        }
-    });
+    // Pointer les datasets vers les bons tableaux
+    chartTempInt.data.datasets[0].data = dataTempInt;
+    chartTempExt.data.datasets[0].data = dataTempExt;
+    chartHumInt.data.datasets[0].data  = dataHumInt;
+    chartHumExt.data.datasets[0].data  = dataHumExt;
 }
 
-// ================== STATION TEMPS RÉEL ==================
+function pushPoint(t, tInt, tExt, hInt, hExt) {
+    if (labels.length >= 50) {
+        labels.shift(); dataTempInt.shift(); dataTempExt.shift(); dataHumInt.shift(); dataHumExt.shift();
+    }
+    labels.push(t);
+    dataTempInt.push(tInt ?? null);
+    dataTempExt.push(tExt ?? null);
+    dataHumInt.push(hInt ?? null);
+    dataHumExt.push(hExt ?? null);
+
+    chartTempInt.update("none");
+    chartTempExt.update("none");
+    chartHumInt.update("none");
+    chartHumExt.update("none");
+}
+
+// =================== STATION TEMPS RÉEL ===================
 let stationAttached = false;
+let pendingPoint    = null;
 
 function initStation() {
     if (stationAttached) return;
     stationAttached = true;
 
-    // Lire l'intervalle sauvegardé dans Firebase si existant
-    db.ref("config/intervalle").once("value").then(snap => {
-        const saved = snap.val();
-        if (saved && intervalLabels[saved]) {
-            setInterval_(saved);
-        } else {
-            setInterval_(currentIntervalSec); // démarre le timer par défaut
-        }
-    });
-
     db.ref("station").on("value", snap => {
-        const d   = snap.val() || {};
-        const ext = d.exterieur || {};
+        const d    = snap.val() || {};
+        const ext  = d.exterieur || {};
         const inte = d.interieur || {};
 
-        // Texte compact (conservé)
-        document.getElementById("tempExt").innerText = ext.temperature ?? "--";
-        document.getElementById("humExt").innerText  = ext.humidite   ?? "--";
-        document.getElementById("tempInt").innerText = inte.temperature ?? "--";
-        document.getElementById("humInt").innerText  = inte.humidite   ?? "--";
+        const tExt = ext.temperature  ?? null;
+        const hExt = ext.humidite     ?? null;
+        const tInt = inte.temperature ?? null;
+        const hInt = inte.humidite    ?? null;
 
-        // ① Mise à jour du cadre instantané (gros chiffres)
-        setTile("bigTempExt", ext.temperature);
-        setTile("bigTempInt", inte.temperature);
-        setTile("bigHumExt",  ext.humidite);
-        setTile("bigHumInt",  inte.humidite);
+        // Texte compact
+        document.getElementById("tempExt").innerText = tExt ?? "--";
+        document.getElementById("humExt").innerText  = hExt ?? "--";
+        document.getElementById("tempInt").innerText = tInt ?? "--";
+        document.getElementById("humInt").innerText  = hInt ?? "--";
+
+        // Tuiles grandes valeurs
+        document.getElementById("bigTempExt").innerText = tExt ?? "--";
+        document.getElementById("bigTempInt").innerText = tInt ?? "--";
+        document.getElementById("bigHumExt").innerText  = hExt ?? "--";
+        document.getElementById("bigHumInt").innerText  = hInt ?? "--";
 
         // Lampe
         const lampe = d.lampe === true;
         document.getElementById("btnLampe").innerText = lampe ? "Lampe : ON" : "Lampe : OFF";
 
-        // Sauvegarde du point courant pour l'enregistrement périodique
-        pendingPoint = { exterieur: { temperature: ext.temperature ?? null, humidite: ext.humidite ?? null },
-                         interieur: { temperature: inte.temperature ?? null, humidite: inte.humidite ?? null } };
+        // Point courant pour l'enregistrement périodique
+        pendingPoint = { exterieur: { temperature: tExt, humidite: hExt },
+                         interieur: { temperature: tInt, humidite: hInt } };
 
-        // Ajout au graphique temps réel (à chaque update Firebase)
-        const t = new Date().toLocaleTimeString();
-        if (realtimeLabels.length > 50) {
-            realtimeLabels.shift(); realtimeIntData.shift();
-            realtimeExtData.shift(); realtimeHumData.shift();
-            realtimeHumExtData.shift();
-        }
-        realtimeLabels.push(t);
-        realtimeIntData.push(inte.temperature ?? null);
-        realtimeExtData.push(ext.temperature  ?? null);
-        realtimeHumData.push(inte.humidite    ?? null);
-        realtimeHumExtData.push(ext.humidite  ?? null); // ← nouveau
-
-        if (chartTempInt) chartTempInt.update();
-        if (chartTempExt) chartTempExt.update();
-        if (chartHum)     chartHum.update();
-        if (chartHumExt)  chartHumExt.update();
+        // Ajout au graphique
+        pushPoint(new Date().toLocaleTimeString(), tInt, tExt, hInt, hExt);
     });
-}
-
-// Helper : met à jour la valeur d'une tuile sans écraser l'unité
-function setTile(id, val) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const unit = el.querySelector(".tile-unit");
-    const unitHTML = unit ? unit.outerHTML : "";
-    el.innerHTML = (val ?? "--") + unitHTML;
 }
 
 function toggleLampe() {
-    db.ref("station/lampe").once("value").then(snap => {
-        db.ref("station/lampe").set(snap.val() !== true);
-    });
+    db.ref("station/lampe").once("value").then(snap => db.ref("station/lampe").set(snap.val() !== true));
 }
 
-// ================== HISTORIQUE ==================
+// =================== INTERVALLE DE PRISE DE POINTS ===================
+let recordTimerId    = null;
+let currentIntSec    = 60;
+const intLabels      = { 30:"30 s", 60:"1 min", 300:"5 min", 600:"10 min", 1800:"30 min" };
+
+function changeInterval(sec) {
+    currentIntSec = sec;
+    document.querySelectorAll(".iv-btn").forEach(b => b.classList.toggle("active", parseInt(b.dataset.sec) === sec));
+    document.getElementById("intervalLabel").innerText = intLabels[sec] || sec + " s";
+    if (recordTimerId) window.clearInterval(recordTimerId);
+    recordTimerId = window.setInterval(recordPoint, sec * 1000);
+    db.ref("config/intervalle").set(sec);
+}
+
+function loadSavedInterval() {
+    db.ref("config/intervalle").once("value").then(snap => {
+        const v = snap.val();
+        changeInterval((v && intLabels[v]) ? v : 60);
+    }).catch(() => changeInterval(60));
+}
+
+function recordPoint() {
+    if (!pendingPoint) return;
+    const now     = new Date();
+    const dateKey = now.toISOString().slice(0, 10);
+    const timeKey = now.toTimeString().slice(0, 8).replace(/:/g, "-");
+    db.ref("historique/" + dateKey + "/" + timeKey).set(pendingPoint);
+}
+
+// =================== HISTORIQUE ===================
 function loadHistory() {
     const date   = document.getElementById("historyDate").value;
     const status = document.getElementById("historyStatus");
@@ -596,67 +536,48 @@ function loadHistory() {
         const data = snap.val();
         const keys = Object.keys(data).sort();
 
-        realtimeLabels.length = 0;
-        realtimeIntData.length = 0;
-        realtimeExtData.length = 0;
-        realtimeHumData.length = 0;
-        realtimeHumExtData.length = 0; // ← réinitialisation
+        // Vider les tableaux partagés
+        labels.length = 0; dataTempInt.length = 0; dataTempExt.length = 0;
+        dataHumInt.length = 0; dataHumExt.length = 0;
 
         keys.forEach(k => {
-            const point = data[k] || {};
-            const inte  = point.interieur || {};
-            const ext   = point.exterieur || {};
-
-            realtimeLabels.push(k);
-            realtimeIntData.push(inte.temperature ?? null);
-            realtimeExtData.push(ext.temperature  ?? null);
-            realtimeHumData.push(inte.humidite    ?? null);
-            realtimeHumExtData.push(ext.humidite  ?? null); // ← nouveau
+            const p   = data[k] || {};
+            const ext = p.exterieur || {};
+            const int = p.interieur || {};
+            labels.push(k);
+            dataTempInt.push(int.temperature ?? null);
+            dataTempExt.push(ext.temperature ?? null);
+            dataHumInt.push(int.humidite     ?? null);
+            dataHumExt.push(ext.humidite     ?? null);
         });
 
-        if (chartTempInt) chartTempInt.update();
-        if (chartTempExt) chartTempExt.update();
-        if (chartHum)     chartHum.update();
-        if (chartHumExt)  chartHumExt.update();
-
-        status.innerText = "Historique chargé.";
+        chartTempInt.update(); chartTempExt.update(); chartHumInt.update(); chartHumExt.update();
+        status.innerText = "Historique chargé (" + keys.length + " points).";
     });
 }
 
-// ================== ADMIN – LISTE UTILISATEURS ==================
+// =================== ADMIN ===================
 function loadUsersList() {
     const usersDiv    = document.getElementById("usersList");
-    const userCountDiv = document.getElementById("userCount");
+    const userCountEl = document.getElementById("userCount");
     const adminErr    = document.getElementById("adminError");
-
-    usersDiv.innerHTML = "";
-    adminErr.innerText = "";
-    userCountDiv.innerText = "Chargement...";
+    usersDiv.innerHTML = ""; adminErr.innerText = ""; userCountEl.innerText = "Chargement...";
 
     db.ref("users").once("value").then(snap => {
-        if (!snap.exists()) { usersDiv.innerHTML = "Aucun utilisateur"; userCountDiv.innerText = "0 utilisateur"; return; }
-
+        if (!snap.exists()) { usersDiv.innerHTML = "Aucun utilisateur"; userCountEl.innerText = "0 utilisateur"; return; }
         const users = snap.val();
         let count = 0;
         for (const uid in users) {
-            const u        = users[uid] || {};
-            const email    = u.email    || "Non renseigné";
-            const username = u.username || "Inconnu";
-            const age      = u.age      || "Non renseigné";
-            const role     = u.role     || "user";
+            const u = users[uid] || {};
             count++;
             const div = document.createElement("div");
             div.className = "user-card";
-            div.innerHTML = `<strong>${username}</strong><br>Email : ${email}<br>Âge : ${age}<br>Rôle : ${role}<br><br>
+            div.innerHTML = `<strong>${u.username||"Inconnu"}</strong><br>Email : ${u.email||"–"}<br>Âge : ${u.age||"–"}<br>Rôle : ${u.role||"user"}<br><br>
                 <button class="danger" onclick="deleteUser('${uid}')">Supprimer</button>`;
             usersDiv.appendChild(div);
         }
-        userCountDiv.innerText = count + " utilisateur(s)";
-    }).catch(e => {
-        console.error(e);
-        adminErr.innerText = "Erreur de chargement des utilisateurs.";
-        userCountDiv.innerText = "Erreur";
-    });
+        userCountEl.innerText = count + " utilisateur(s)";
+    }).catch(e => { adminErr.innerText = "Erreur : " + e.message; userCountEl.innerText = "Erreur"; });
 }
 
 function deleteUser(uid) {
