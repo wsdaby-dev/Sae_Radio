@@ -241,6 +241,11 @@ Règles strictes :
 6. Dans les extraits, les colonnes des tableaux sont séparées par " | ".
 7. Réponds dans la langue de l'utilisateur (français par défaut), de façon concise et structurée.`;
 
+const GENERAL_PROMPT = `Tu es un assistant expert en électronique, composants, capteurs, microcontrôleurs et lecture de datasheets.
+Aucun document n'a été fourni : réponds avec tes connaissances générales, de façon claire, concise et structurée.
+Si tu donnes des valeurs numériques précises propres à un composant (tension max, courant, brochage…), rappelle brièvement qu'elles doivent être vérifiées dans la datasheet officielle, et que l'utilisateur peut déposer le PDF pour une réponse sourcée.
+Si tu ne sais pas, dis-le plutôt que d'inventer. Réponds dans la langue de l'utilisateur (français par défaut).`;
+
 const COMPARE_PROMPT = `\nMODE COMPARAISON : présente la réponse sous forme de tableau Markdown, une colonne par document/composant, une ligne par caractéristique. Indique "n/d" si l'information manque.`;
 
 const SUMMARY_QUESTION = `Fais une fiche résumé de ce composant sous forme de liste : référence, fabricant, description, tension d'alimentation, courant (typique et max), plage de température, boîtier, brochage (pins principales), applications.`;
@@ -521,7 +526,7 @@ function selectedIds() { return state.docs.filter((d) => d.selected && d.chunks)
 async function ask(question, opts = {}) {
   if (state.busy || !question.trim()) return;
   const ids = opts.onlyDoc ? [opts.onlyDoc] : selectedIds();
-  if (!ids.length) { toast("Ajoute et coche au moins un document avant de poser une question."); return; }
+  const general = !ids.length; // aucun document : l'IA répond avec ses connaissances générales
 
   state.busy = true; updateSend();
   const compare = $("compare").checked && !opts.onlyDoc && ids.length > 1;
@@ -529,13 +534,13 @@ async function ask(question, opts = {}) {
   const lastUser = [...state.history].reverse().find((m) => m.role === "user")?.display || "";
   const query = (isFollowUp ? lastUser + " " : "") + question + (opts.extraQuery ? " " + opts.extraQuery : "");
   const k = state.engine === "web" ? 5 : 9;
-  const hits = retrieve(query, { docIds: ids, k, balanced: compare || ids.length > 1, includeFirstPage: !!opts.onlyDoc });
+  const hits = general ? [] : retrieve(query, { docIds: ids, k, balanced: compare || ids.length > 1, includeFirstPage: !!opts.onlyDoc });
   state.lastSources = hits;
 
   const context = hits.map((c, i) => `[${i + 1}] (${c.file}, page ${c.page}${c.heading ? ", section « " + c.heading + " »" : ""})\n${c.text}`).join("\n\n---\n\n");
-  const userMsg = `CONTEXTE :\n${context}\n\nQUESTION : ${question}`;
+  const userMsg = general ? question : `CONTEXTE :\n${context}\n\nQUESTION : ${question}`;
   const messages = [
-    { role: "system", content: SYSTEM_PROMPT + (compare ? COMPARE_PROMPT : "") },
+    { role: "system", content: general ? GENERAL_PROMPT : SYSTEM_PROMPT + (compare ? COMPARE_PROMPT : "") },
     ...state.history.slice(-4).map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: userMsg },
   ];
@@ -610,7 +615,7 @@ const scrollChat = () => { $("chat").scrollTop = $("chat").scrollHeight; };
 function renderEmpty() {
   $("chat").innerHTML = `<div class="empty">
     <h2>Quelle est la tension max de ton composant ?</h2>
-    <p>Dépose une ou plusieurs datasheets à gauche, choisis ton moteur IA, puis pose ta question. Chaque réponse renvoie à la page du PDF.</p>
+    <p>Pose ta question directement : sans document, l'IA répond avec ses connaissances générales. Dépose une ou plusieurs datasheets à gauche pour obtenir des réponses tirées de tes PDF, avec la page citée.</p>
     <div class="sugg">
       <button type="button">Quelle est la tension d'alimentation maximale absolue ?</button>
       <button type="button">Donne-moi le brochage et la fonction de chaque broche.</button>
@@ -691,7 +696,8 @@ function updateScope() {
   const n = selectedIds().length;
   $("scope").textContent = state.docs.length
     ? `${n} document${n > 1 ? "s" : ""} sélectionné${n > 1 ? "s" : ""} sur ${state.docs.length}`
-    : "Aucun document pour l'instant";
+    : "Mode général : pose ta question, ou ajoute un PDF pour des réponses sourcées";
+  if (state.docs.length && !n) $("scope").textContent = "Aucun document coché : mode général";
 }
 
 function updateBadge() {
