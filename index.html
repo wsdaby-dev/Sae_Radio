@@ -157,13 +157,13 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
 
       <div id="pOllama">
         <label class="f" for="oUrl">Adresse d'Ollama</label>
-        <input class="in" id="oUrl" value="http://localhost:11434">
+        <input class="in" id="oUrl" value="http://127.0.0.1:11434">
         <label class="f" for="oModel">Modèle</label>
         <input class="in" id="oModel" list="oModels" value="qwen2.5:7b">
         <datalist id="oModels"><option value="qwen2.5:7b"><option value="llama3.1:8b"><option value="qwen2.5:3b"><option value="llama3.2:3b"><option value="mistral:7b"></datalist>
         <div style="margin-top:8px"><button class="btn ghost" id="oTest" type="button">Tester la connexion</button></div>
         <div class="status" id="oStatus"></div>
-        <p class="hint">Lance Ollama avec <code>OLLAMA_ORIGINS="*" ollama serve</code> pour autoriser ce site, puis <code>ollama pull qwen2.5:7b</code>.</p>
+        <p class="hint">Le plus simple : double-clique sur <code>Lancer-DatasheetAI.bat</code>, qui configure tout.</p>
       </div>
 
       <div id="pWeb" hidden>
@@ -260,6 +260,7 @@ const state = {
   web: null,     // moteur WebLLM
   webModel: null,
   busy: false,
+  ollamaBase: null,
   abort: null,
   lastSources: [],
 };
@@ -270,7 +271,7 @@ const store = {
   get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
-$("oUrl").value = store.get("oUrl", "http://localhost:11434");
+$("oUrl").value = store.get("oUrl", "http://127.0.0.1:11434");
 $("oModel").value = store.get("oModel", "qwen2.5:7b");
 $("wModel").value = store.get("wModel", $("wModel").value);
 if (store.get("theme")) document.documentElement.dataset.theme = store.get("theme");
@@ -462,8 +463,11 @@ function retrieve(query, { docIds, k, balanced, includeFirstPage }) {
    3. MOTEURS LLM
    ============================================================ */
 async function streamOllama(messages, onToken, signal) {
-  const url = $("oUrl").value.replace(/\/$/, "");
-  const res = await fetch(url + "/api/chat", {
+  if (!state.ollamaBase) {
+    const found = await findOllama();
+    if (!found) throw new Error(diagnose());
+  }
+  const res = await fetch(state.ollamaBase + "/api/chat", {
     method: "POST", signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: $("oModel").value.trim(), messages, stream: true, options: { temperature: 0.1, num_ctx: 8192 } }),
@@ -558,8 +562,8 @@ async function ask(question, opts = {}) {
     else await streamWeb(messages, onToken);
   } catch (e) {
     if (e.name !== "AbortError") {
-      const hint = state.engine === "ollama"
-        ? "\n\nVérifie qu'Ollama tourne, que le modèle est téléchargé et qu'il est lancé avec `OLLAMA_ORIGINS=\"*\"`."
+      const hint = state.engine === "ollama" && !String(e.message).includes("Ollama")
+        ? "\n\nVérifie qu'Ollama tourne et que le modèle est bien téléchargé."
         : "";
       acc += (acc ? "\n\n" : "") + "**Erreur :** " + (e.message || e) + hint;
     }
@@ -724,25 +728,54 @@ function setEngine(e) {
   updateBadge();
 }
 
+const probe = async (base) => {
+  try {
+    const r = await fetch(base + "/api/tags", { signal: AbortSignal.timeout(4000) });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+};
+
+async function findOllama() {
+  const typed = $("oUrl").value.trim().replace(/\/$/, "");
+  const cands = [];
+  // Si la page est servie par serveur.py, le proxy /ollama évite tout blocage du navigateur
+  if (location.protocol.startsWith("http")) cands.push(location.origin + "/ollama");
+  cands.push(typed, "http://127.0.0.1:11434", "http://localhost:11434");
+  for (const base of [...new Set(cands)]) {
+    const json = await probe(base);
+    if (json) { state.ollamaBase = base; return { base, json }; }
+  }
+  state.ollamaBase = null;
+  return null;
+}
+
+function diagnose() {
+  if (location.protocol === "https:" || location.origin === "null" && location.protocol !== "file:") {
+    return "Cette page est ouverte depuis un site en HTTPS ou un aperçu (GitHub Pages, aperçu Claude…) : le navigateur bloque l'accès à ton PC. Télécharge index.html et ouvre-le avec Lancer-DatasheetAI.bat. Si Chrome affiche une demande « accéder aux appareils du réseau local », clique sur Autoriser.";
+  }
+  return "Ollama ne répond pas sur ce PC. Vérifie que l'icône Ollama est dans la barre des tâches (près de l'horloge), sinon ouvre l'application Ollama ou lance « ollama serve » dans un terminal. Relance ensuite Lancer-DatasheetAI.bat.";
+}
+
 async function testOllama() {
-  const url = $("oUrl").value.replace(/\/$/, "");
   store.set("oUrl", $("oUrl").value); store.set("oModel", $("oModel").value);
   setStatus("oStatus", "Connexion…");
-  try {
-    const r = await fetch(url + "/api/tags");
-    const j = await r.json();
-    const names = (j.models || []).map((m) => m.name);
-    $("oModels").innerHTML = names.map((n) => `<option value="${esc(n)}">`).join("");
-    const wanted = $("oModel").value.trim();
-    const ok = names.some((n) => n === wanted || n.startsWith(wanted + ":"));
-    if (!names.length) setStatus("oStatus", "Connecté, mais aucun modèle installé. Lance : ollama pull " + wanted, "bad");
-    else if (!ok) {
-      $("oModel").value = names[0]; store.set("oModel", names[0]);
-      setStatus("oStatus", `Connecté. Modèle choisi automatiquement : ${names[0]}`, "ok");
-    }
-    else setStatus("oStatus", "Connecté. Modèle disponible.", "ok");
-  } catch {
-    setStatus("oStatus", "Impossible de joindre Ollama. Est-il lancé avec OLLAMA_ORIGINS=\"*\" ?", "bad");
+  const found = await findOllama();
+  if (!found) {
+    setStatus("oStatus", diagnose(), "bad");
+    updateBadge();
+    return;
+  }
+  const names = (found.json.models || []).map((m) => m.name);
+  $("oModels").innerHTML = names.map((n) => `<option value="${esc(n)}">`).join("");
+  const wanted = $("oModel").value.trim();
+  const ok = names.some((n) => n === wanted || n.startsWith(wanted + ":"));
+  if (!names.length) {
+    setStatus("oStatus", "Connecté à Ollama, mais aucun modèle installé. Dans un terminal : ollama pull qwen2.5:3b", "bad");
+  } else if (!ok) {
+    $("oModel").value = names[0]; store.set("oModel", names[0]);
+    setStatus("oStatus", `Connecté. Modèle choisi automatiquement : ${names[0]}`, "ok");
+  } else {
+    setStatus("oStatus", "Connecté. Modèle disponible.", "ok");
   }
   updateBadge();
 }
