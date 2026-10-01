@@ -736,7 +736,10 @@ async function testOllama() {
     const wanted = $("oModel").value.trim();
     const ok = names.some((n) => n === wanted || n.startsWith(wanted + ":"));
     if (!names.length) setStatus("oStatus", "Connecté, mais aucun modèle installé. Lance : ollama pull " + wanted, "bad");
-    else if (!ok) setStatus("oStatus", `Connecté. « ${wanted} » introuvable. Disponibles : ${names.join(", ")}`, "bad");
+    else if (!ok) {
+      $("oModel").value = names[0]; store.set("oModel", names[0]);
+      setStatus("oStatus", `Connecté. Modèle choisi automatiquement : ${names[0]}`, "ok");
+    }
     else setStatus("oStatus", "Connecté. Modèle disponible.", "ok");
   } catch {
     setStatus("oStatus", "Impossible de joindre Ollama. Est-il lancé avec OLLAMA_ORIGINS=\"*\" ?", "bad");
@@ -791,6 +794,7 @@ $("theme").addEventListener("click", () => {
 setEngine(store.get("engine", "ollama"));
 renderEmpty();
 renderDocs();
+if (state.engine === "ollama") testOllama();
 </script>
 </body>
 </html>
