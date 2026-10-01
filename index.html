@@ -163,7 +163,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
         <datalist id="oModels"><option value="qwen2.5:7b"><option value="llama3.1:8b"><option value="qwen2.5:3b"><option value="llama3.2:3b"><option value="mistral:7b"></datalist>
         <div style="margin-top:8px"><button class="btn ghost" id="oTest" type="button">Tester la connexion</button></div>
         <div class="status" id="oStatus"></div>
-        <p class="hint">Le plus simple : double-clique sur <code>Lancer-DatasheetAI.bat</code>, qui configure tout.</p>
+        <p class="hint">En local : double-clique sur <code>Lancer-DatasheetAI.bat</code>. Depuis GitHub Pages : lance une fois <code>Autoriser-GitHub.bat</code>.</p>
       </div>
 
       <div id="pWeb" hidden>
@@ -750,8 +750,11 @@ async function findOllama() {
 }
 
 function diagnose() {
+  if (location.hostname.endsWith("github.io")) {
+    return "Depuis GitHub Pages, Ollama doit autoriser ce site (une seule fois) : ouvre un terminal et tape  setx OLLAMA_ORIGINS \"https://*.github.io\"  puis quitte et rouvre Ollama (icône près de l'horloge → Quit). Si Chrome demande l'accès au réseau local, clique sur Autoriser. Safari ne fonctionne pas : utilise Chrome, Edge ou Firefox. Sans rien installer, tu peux aussi utiliser le moteur « Navigateur ».";
+  }
   if (location.protocol === "https:" || location.origin === "null" && location.protocol !== "file:") {
-    return "Cette page est ouverte depuis un site en HTTPS ou un aperçu (GitHub Pages, aperçu Claude…) : le navigateur bloque l'accès à ton PC. Télécharge index.html et ouvre-le avec Lancer-DatasheetAI.bat. Si Chrome affiche une demande « accéder aux appareils du réseau local », clique sur Autoriser.";
+    return "Cette page est ouverte dans un aperçu ou un site en HTTPS : le navigateur bloque l'accès à ton PC. Télécharge index.html et ouvre-le avec Lancer-DatasheetAI.bat, ou utilise le moteur « Navigateur ».";
   }
   return "Ollama ne répond pas sur ce PC. Vérifie que l'icône Ollama est dans la barre des tâches (près de l'horloge), sinon ouvre l'application Ollama ou lance « ollama serve » dans un terminal. Relance ensuite Lancer-DatasheetAI.bat.";
 }
