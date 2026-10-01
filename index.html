@@ -159,8 +159,8 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
         <label class="f" for="oUrl">Adresse d'Ollama</label>
         <input class="in" id="oUrl" value="http://127.0.0.1:11434">
         <label class="f" for="oModel">Modèle</label>
-        <input class="in" id="oModel" list="oModels" value="qwen2.5:7b">
-        <datalist id="oModels"><option value="qwen2.5:7b"><option value="llama3.1:8b"><option value="qwen2.5:3b"><option value="llama3.2:3b"><option value="mistral:7b"></datalist>
+        <input class="in" id="oModel" list="oModels" value="qwen2.5:3b">
+        <datalist id="oModels"><option value="qwen2.5:3b"><option value="qwen2.5:7b"><option value="llama3.1:8b"><option value="llama3.2:3b"><option value="mistral:7b"></datalist>
         <div style="margin-top:8px"><button class="btn ghost" id="oTest" type="button">Tester la connexion</button></div>
         <div class="status" id="oStatus"></div>
         <p class="hint">En local : double-clique sur <code>Lancer-DatasheetAI.bat</code>. Depuis GitHub Pages : lance une fois <code>Autoriser-GitHub.bat</code>.</p>
@@ -272,7 +272,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 $("oUrl").value = store.get("oUrl", "http://127.0.0.1:11434");
-$("oModel").value = store.get("oModel", "qwen2.5:7b");
+$("oModel").value = store.get("oModel", "qwen2.5:3b");
 $("wModel").value = store.get("wModel", $("wModel").value);
 if (store.get("theme")) document.documentElement.dataset.theme = store.get("theme");
 
