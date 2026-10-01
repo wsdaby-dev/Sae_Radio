@@ -470,7 +470,7 @@ async function streamOllama(messages, onToken, signal) {
   const res = await fetch(state.ollamaBase + "/api/chat", {
     method: "POST", signal,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: $("oModel").value.trim(), messages, stream: true, options: { temperature: 0.1, num_ctx: 8192 } }),
+    body: JSON.stringify({ model: $("oModel").value.trim(), messages, stream: true, keep_alive: "30m", options: { temperature: 0.1, num_ctx: 4096 } }),
   });
   if (!res.ok) throw new Error("Ollama a répondu " + res.status + " : " + (await res.text()).slice(0, 200));
   const reader = res.body.getReader();
@@ -537,7 +537,7 @@ async function ask(question, opts = {}) {
   const isFollowUp = question.split(/\s+/).length < 6 && state.history.length;
   const lastUser = [...state.history].reverse().find((m) => m.role === "user")?.display || "";
   const query = (isFollowUp ? lastUser + " " : "") + question + (opts.extraQuery ? " " + opts.extraQuery : "");
-  const k = state.engine === "web" ? 5 : 9;
+  const k = state.engine === "web" ? 4 : 6;
   const hits = general ? [] : retrieve(query, { docIds: ids, k, balanced: compare || ids.length > 1, includeFirstPage: !!opts.onlyDoc });
   state.lastSources = hits;
 
